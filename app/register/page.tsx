@@ -100,6 +100,7 @@ export default function RegisterPage() {
               <Input
                 id="password"
                 type="password"
+                placeholder="Enter your password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
@@ -110,6 +111,7 @@ export default function RegisterPage() {
               <Input
                 id="confirmPassword"
                 type="password"
+                placeholder="Enter your password again"
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 required
@@ -117,7 +119,7 @@ export default function RegisterPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full mt-4" disabled={isLoading}>
               {isLoading ? "Creating account..." : "Create account"}
             </Button>
             <div className="text-center text-sm text-muted-foreground">
