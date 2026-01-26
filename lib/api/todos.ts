@@ -1,62 +1,57 @@
-import { supabase } from '../supabase/client'
-import type { InsertTodo, UpdateTodo, Todo } from '../supabase/database'
+"use server"
 
-export async function getTodos(projectId?: string): Promise<Todo[]> {
-  let query = supabase
-    .from('todos')
-    .select('*')
-    .order('created_at', { ascending: false })
+import { db } from '../db'
+import { todos, type Todo, type NewTodo } from '../db/schema'
+import { eq, and, desc } from 'drizzle-orm'
 
-  if (projectId) {
-    query = query.eq('project_id', projectId)
+export async function getTodos(user_id: string, project_id?: string): Promise<Todo[]> {
+  const conditions = [eq(todos.user_id, user_id)]
+  
+  if (project_id) {
+    conditions.push(eq(todos.project_id, project_id))
   }
 
-  const { data, error } = await query
+  const data = await db.query.todos.findMany({
+    where: and(...conditions),
+    orderBy: [desc(todos.created_at)],
+  })
 
-  if (error) throw error
-  return data || []
-}
-
-export async function createTodo(todo: InsertTodo): Promise<Todo> {
-  const { data, error } = await supabase
-    .from('todos')
-    .insert({ ...todo, updated_at: new Date().toISOString() })
-    .select()
-    .single()
-
-  if (error) throw error
   return data
 }
 
-export async function updateTodo(id: string, todo: UpdateTodo): Promise<Todo> {
-  const { data, error } = await supabase
-    .from('todos')
-    .update({ ...todo, updated_at: new Date().toISOString() })
-    .eq('id', id)
-    .select()
-    .single()
+export async function createTodo(user_id: string, todo: Omit<NewTodo, 'user_id'>): Promise<Todo> {
+  const [data] = await db.insert(todos)
+    .values({ 
+      ...todo, 
+      user_id, 
+      updated_at: new Date() 
+    } as any)
+    .returning()
 
-  if (error) throw error
+  return data
+}
+
+export async function updateTodo(id: string, todo: Partial<NewTodo>): Promise<Todo> {
+  const [data] = await db.update(todos)
+    .set({ 
+      ...todo, 
+      updated_at: new Date() 
+    } as any)
+    .where(eq(todos.id, id))
+    .returning()
+
   return data
 }
 
 export async function toggleTodoComplete(id: string, completed: boolean): Promise<Todo> {
-  const { data, error } = await supabase
-    .from('todos')
-    .update({ completed, updated_at: new Date().toISOString() })
-    .eq('id', id)
-    .select()
-    .single()
+  const [data] = await db.update(todos)
+    .set({ completed, updated_at: new Date() })
+    .where(eq(todos.id, id))
+    .returning()
 
-  if (error) throw error
   return data
 }
 
 export async function deleteTodo(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('todos')
-    .delete()
-    .eq('id', id)
-
-  if (error) throw error
+  await db.delete(todos).where(eq(todos.id, id))
 }

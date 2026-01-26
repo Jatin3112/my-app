@@ -1,0 +1,1 @@
+ALTER TABLE "timesheet_entries" ALTER COLUMN "hours" SET DATA TYPE double precision;

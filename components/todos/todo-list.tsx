@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -11,6 +12,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import {
   Select,
   SelectContent,
@@ -33,16 +44,21 @@ import { Plus, Pencil, Trash2, Check, X } from "lucide-react"
 import { toast } from "sonner"
 import { getTodos, createTodo, updateTodo, toggleTodoComplete, deleteTodo } from "@/lib/api/todos"
 import { getProjects } from "@/lib/api/projects"
-import type { Todo, Project } from "@/lib/supabase/database"
+import type { Todo, Project } from "@/lib/db/schema"
 
 interface TodoListProps {
   onProjectsChange?: () => void
 }
 
 export function TodoList({ onProjectsChange }: TodoListProps) {
+  const { data: session } = useSession()
+  const userId = (session?.user as any)?.id
+
   const [todos, setTodos] = useState<Todo[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   const [isOpen, setIsOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [todoToDelete, setTodoToDelete] = useState<string | null>(null)
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null)
   const [filterProjectId, setFilterProjectId] = useState<string>("all")
   const [formData, setFormData] = useState({
@@ -53,19 +69,22 @@ export function TodoList({ onProjectsChange }: TodoListProps) {
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    loadTodos()
-    loadProjects()
-  }, [])
-
-  useEffect(() => {
-    if (onProjectsChange) {
+    if (userId) {
+      loadTodos()
       loadProjects()
     }
-  }, [onProjectsChange])
+  }, [userId])
+
+  useEffect(() => {
+    if (onProjectsChange && userId) {
+      loadProjects()
+    }
+  }, [onProjectsChange, userId])
 
   async function loadTodos() {
+    if (!userId) return
     try {
-      const data = await getTodos()
+      const data = await getTodos(userId)
       setTodos(data)
     } catch (error) {
       toast.error("Failed to load todos")
@@ -74,8 +93,9 @@ export function TodoList({ onProjectsChange }: TodoListProps) {
   }
 
   async function loadProjects() {
+    if (!userId) return
     try {
-      const data = await getProjects()
+      const data = await getProjects(userId)
       setProjects(data)
     } catch (error) {
       toast.error("Failed to load projects")
@@ -85,6 +105,7 @@ export function TodoList({ onProjectsChange }: TodoListProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!userId) return
     if (!formData.title.trim()) {
       toast.error("Todo title is required")
       return
@@ -101,7 +122,7 @@ export function TodoList({ onProjectsChange }: TodoListProps) {
         await updateTodo(editingTodo.id, todoData)
         toast.success("Todo updated successfully")
       } else {
-        await createTodo(todoData)
+        await createTodo(userId, todoData)
         toast.success("Todo created successfully")
       }
       await loadTodos()
@@ -125,15 +146,15 @@ export function TodoList({ onProjectsChange }: TodoListProps) {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Are you sure you want to delete this todo?")) {
-      return
-    }
+  async function handleDelete() {
+    if (!todoToDelete) return
 
     try {
-      await deleteTodo(id)
+      await deleteTodo(todoToDelete)
       toast.success("Todo deleted successfully")
       await loadTodos()
+      setIsDeleteDialogOpen(false)
+      setTodoToDelete(null)
     } catch (error) {
       toast.error("Failed to delete todo")
       console.error(error)
@@ -316,7 +337,10 @@ export function TodoList({ onProjectsChange }: TodoListProps) {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => handleDelete(todo.id)}
+                        onClick={() => {
+                          setTodoToDelete(todo.id)
+                          setIsDeleteDialogOpen(true)
+                        }}
                       >
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>
@@ -328,6 +352,23 @@ export function TodoList({ onProjectsChange }: TodoListProps) {
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your todo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setTodoToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

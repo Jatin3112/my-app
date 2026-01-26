@@ -1,19 +1,39 @@
+"use client"
+
 import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckSquare, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CheckSquare, Clock, LogOut, User } from "lucide-react";
 
 export default function Home() {
+  const { data: session } = useSession();
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold tracking-tight mb-3">
-              Task Manager
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              Manage your todos and track your time efficiently
-            </p>
+          <div className="flex justify-between items-start mb-12">
+            <div>
+              <h1 className="text-4xl font-bold tracking-tight mb-3">
+                Task Manager
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                Manage your todos and track your time efficiently
+              </p>
+            </div>
+            {session && (
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground text-sm font-medium">
+                  <User className="w-4 h-4" />
+                  {session.user?.name || session.user?.email}
+                </div>
+                <Button variant="outline" size="sm" onClick={() => signOut()}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">

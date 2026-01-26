@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,6 +13,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import {
   Select,
   SelectContent,
@@ -39,12 +50,17 @@ import {
   deleteTimesheetEntry,
 } from "@/lib/api/timesheet"
 import { getProjects } from "@/lib/api/projects"
-import type { TimesheetEntry, Project } from "@/lib/supabase/database"
+import type { TimesheetEntry, Project } from "@/lib/db/schema"
 
 export function TimesheetList() {
+  const { data: session } = useSession()
+  const userId = (session?.user as any)?.id
+
   const [entries, setEntries] = useState<TimesheetEntry[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   const [isOpen, setIsOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [entryToDelete, setEntryToDelete] = useState<string | null>(null)
   const [editingEntry, setEditingEntry] = useState<TimesheetEntry | null>(null)
   const [formData, setFormData] = useState({
     date: format(new Date(), "yyyy-MM-dd"),
@@ -56,13 +72,16 @@ export function TimesheetList() {
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    loadEntries()
-    loadProjects()
-  }, [])
+    if (userId) {
+      loadEntries()
+      loadProjects()
+    }
+  }, [userId])
 
   async function loadEntries() {
+    if (!userId) return
     try {
-      const data = await getTimesheetEntries()
+      const data = await getTimesheetEntries(userId)
       setEntries(data)
     } catch (error) {
       toast.error("Failed to load timesheet entries")
@@ -71,8 +90,9 @@ export function TimesheetList() {
   }
 
   async function loadProjects() {
+    if (!userId) return
     try {
-      const data = await getProjects()
+      const data = await getProjects(userId)
       setProjects(data)
     } catch (error) {
       toast.error("Failed to load projects")
@@ -82,6 +102,7 @@ export function TimesheetList() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!userId) return
     if (!formData.project_name.trim() || !formData.task_description.trim() || !formData.hours) {
       toast.error("Please fill in all required fields")
       return
@@ -107,7 +128,7 @@ export function TimesheetList() {
         await updateTimesheetEntry(editingEntry.id, entryData)
         toast.success("Entry updated successfully")
       } else {
-        await createTimesheetEntry(entryData)
+        await createTimesheetEntry(userId, entryData)
         toast.success("Entry created successfully")
       }
       await loadEntries()
@@ -120,15 +141,15 @@ export function TimesheetList() {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Are you sure you want to delete this entry?")) {
-      return
-    }
+  async function handleDelete() {
+    if (!entryToDelete) return
 
     try {
-      await deleteTimesheetEntry(id)
+      await deleteTimesheetEntry(entryToDelete)
       toast.success("Entry deleted successfully")
       await loadEntries()
+      setIsDeleteDialogOpen(false)
+      setEntryToDelete(null)
     } catch (error) {
       toast.error("Failed to delete entry")
       console.error(error)
@@ -343,7 +364,10 @@ export function TimesheetList() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => handleDelete(entry.id)}
+                              onClick={() => {
+                                setEntryToDelete(entry.id)
+                                setIsDeleteDialogOpen(true)
+                              }}
                             >
                               <Trash2 className="w-4 h-4 text-destructive" />
                             </Button>
@@ -358,6 +382,23 @@ export function TimesheetList() {
           })
         )}
       </div>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your timesheet entry.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setEntryToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

@@ -1,43 +1,41 @@
-import { supabase } from '../supabase/client'
-import type { InsertProject, UpdateProject, Project } from '../supabase/database'
+"use server"
 
-export async function getProjects(): Promise<Project[]> {
-  const { data, error } = await supabase
-    .from('projects')
-    .select('*')
+import { db } from '../db'
+import { projects, type Project, type NewProject } from '../db/schema'
+import { eq } from 'drizzle-orm'
 
-  if (error) throw error
-  return data || []
-}
+export async function getProjects(user_id: string): Promise<Project[]> {
+  const data = await db.query.projects.findMany({
+    where: eq(projects.user_id, user_id),
+  })
 
-export async function createProject(project: InsertProject): Promise<Project> {
-  const { data, error } = await supabase
-    .from('projects')
-    .insert({ ...project, updated_at: new Date().toISOString() })
-    .select()
-    .single()
-
-  if (error) throw error
   return data
 }
 
-export async function updateProject(id: string, project: UpdateProject): Promise<Project> {
-  const { data, error } = await supabase
-    .from('projects')
-    .update({ ...project, updated_at: new Date().toISOString() })
-    .eq('id', id)
-    .select()
-    .single()
+export async function createProject(user_id: string, project: Omit<NewProject, 'user_id'>): Promise<Project> {
+  const [data] = await db.insert(projects)
+    .values({ 
+      ...project, 
+      user_id, 
+      updated_at: new Date() 
+    } as any)
+    .returning()
 
-  if (error) throw error
+  return data
+}
+
+export async function updateProject(id: string, project: Partial<NewProject>): Promise<Project> {
+  const [data] = await db.update(projects)
+    .set({ 
+      ...project, 
+      updated_at: new Date() 
+    } as any)
+    .where(eq(projects.id, id))
+    .returning()
+
   return data
 }
 
 export async function deleteProject(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('projects')
-    .delete()
-    .eq('id', id)
-
-  if (error) throw error
+  await db.delete(projects).where(eq(projects.id, id))
 }

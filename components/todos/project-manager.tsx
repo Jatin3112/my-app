@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -11,29 +12,47 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Pencil, Trash2, ChevronDown, ChevronUp } from "lucide-react"
 import { toast } from "sonner"
 import { getProjects, createProject, updateProject, deleteProject } from "@/lib/api/projects"
-import type { Project } from "@/lib/supabase/database"
+import type { Project } from "@/lib/db/schema"
 
 export function ProjectManager() {
+  const { data: session } = useSession()
+  const userId = (session?.user as any)?.id
+
   const [projects, setProjects] = useState<Project[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [formData, setFormData] = useState({ name: "", description: "" })
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    loadProjects()
-  }, [])
+    if (userId) {
+      loadProjects()
+    }
+  }, [userId])
 
   async function loadProjects() {
+    if (!userId) return
     try {
-      const data = await getProjects()
+      const data = await getProjects(userId)
       setProjects(data)
     } catch (error) {
       toast.error("Failed to load projects")
@@ -43,6 +62,7 @@ export function ProjectManager() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!userId) return
     if (!formData.name.trim()) {
       toast.error("Project name is required")
       return
@@ -54,7 +74,7 @@ export function ProjectManager() {
         await updateProject(editingProject.id, formData)
         toast.success("Project updated successfully")
       } else {
-        await createProject(formData)
+        await createProject(userId, formData)
         toast.success("Project created successfully")
       }
       await loadProjects()
@@ -67,15 +87,15 @@ export function ProjectManager() {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Are you sure you want to delete this project? This will unlink all associated todos.")) {
-      return
-    }
+  async function handleDelete() {
+    if (!projectToDelete) return
 
     try {
-      await deleteProject(id)
+      await deleteProject(projectToDelete)
       toast.success("Project deleted successfully")
       await loadProjects()
+      setIsDeleteDialogOpen(false)
+      setProjectToDelete(null)
     } catch (error) {
       toast.error("Failed to delete project")
       console.error(error)
@@ -189,7 +209,10 @@ export function ProjectManager() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => handleDelete(project.id)}
+                    onClick={() => {
+                      setProjectToDelete(project.id)
+                      setIsDeleteDialogOpen(true)
+                    }}
                   >
                     <Trash2 className="w-4 h-4 text-destructive" />
                   </Button>
@@ -199,6 +222,23 @@ export function ProjectManager() {
           )}
         </div>
       )}
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your project and unlink all associated todos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setProjectToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
