@@ -29,10 +29,14 @@ import { Plus, Pencil, Trash2, ChevronDown, ChevronUp } from "lucide-react"
 import { toast } from "sonner"
 import { getProjects, createProject, updateProject, deleteProject } from "@/lib/api/projects"
 import type { Project } from "@/lib/db/schema"
+import { useWorkspace } from "@/hooks/use-workspace"
 
 export function ProjectManager() {
   const { data: session } = useSession()
   const userId = (session?.user as any)?.id
+
+  const { currentWorkspace } = useWorkspace()
+  const workspaceId = currentWorkspace?.id
 
   const [projects, setProjects] = useState<Project[]>([])
   const [isOpen, setIsOpen] = useState(false)
@@ -44,15 +48,15 @@ export function ProjectManager() {
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    if (userId) {
+    if (userId && workspaceId) {
       loadProjects()
     }
-  }, [userId])
+  }, [userId, workspaceId])
 
   async function loadProjects() {
-    if (!userId) return
+    if (!userId || !workspaceId) return
     try {
-      const data = await getProjects(userId)
+      const data = await getProjects(workspaceId, userId)
       setProjects(data)
     } catch (error) {
       toast.error("Failed to load projects")
@@ -62,7 +66,7 @@ export function ProjectManager() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!userId) return
+    if (!userId || !workspaceId) return
     if (!formData.name.trim()) {
       toast.error("Project name is required")
       return
@@ -71,10 +75,10 @@ export function ProjectManager() {
     setIsLoading(true)
     try {
       if (editingProject) {
-        await updateProject(editingProject.id, formData)
+        await updateProject(workspaceId, userId, editingProject.id, formData)
         toast.success("Project updated successfully")
       } else {
-        await createProject(userId, formData)
+        await createProject(workspaceId, userId, formData)
         toast.success("Project created successfully")
       }
       await loadProjects()
@@ -91,7 +95,7 @@ export function ProjectManager() {
     if (!projectToDelete) return
 
     try {
-      await deleteProject(projectToDelete)
+      await deleteProject(workspaceId!, userId, projectToDelete)
       toast.success("Project deleted successfully")
       await loadProjects()
       setIsDeleteDialogOpen(false)

@@ -11,5 +11,7 @@ export const config = {
     "/",
     "/todos/:path*",
     "/timesheet/:path*",
+    "/invite/:path*",
+    "/workspace/:path*",
   ],
 }

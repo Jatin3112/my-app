@@ -3,10 +3,12 @@ import { db } from "@/lib/db"
 import { users } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
 import bcrypt from "bcrypt"
+import { createWorkspace } from "@/lib/api/workspaces"
+import { acceptInvitation } from "@/lib/api/invitations"
 
 export async function POST(req: Request) {
   try {
-    const { email, password, name } = await req.json()
+    const { email, password, name, inviteToken } = await req.json()
 
     if (!email || !password) {
       return NextResponse.json(
@@ -39,6 +41,21 @@ export async function POST(req: Request) {
         updated_at: new Date(),
       })
       .returning()
+
+    // Handle invite token or create default workspace
+    if (inviteToken) {
+      try {
+        await acceptInvitation(inviteToken, newUser.id)
+      } catch {
+        // Invitation failed but user was created — create default workspace instead
+        const displayName = name || email.split("@")[0]
+        await createWorkspace(newUser.id, { name: `${displayName}'s Workspace` })
+      }
+    } else {
+      // Create default workspace for new user
+      const displayName = name || email.split("@")[0]
+      await createWorkspace(newUser.id, { name: `${displayName}'s Workspace` })
+    }
 
     return NextResponse.json(
       { message: "User created successfully", user: { id: newUser.id, email: newUser.email, name: newUser.name } },
