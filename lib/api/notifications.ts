@@ -2,8 +2,7 @@
 
 import { db } from "@/lib/db"
 import { notifications, notificationPreferences, workspaceMembers } from "@/lib/db/schema"
-import { eq, and, desc } from "drizzle-orm"
-import { sseConnections } from "@/lib/sse/connections"
+import { eq, and, desc, count, ne } from "drizzle-orm"
 
 export async function createNotification(
   workspaceId: string,
@@ -13,14 +12,20 @@ export async function createNotification(
   entityId: string,
   message: string
 ) {
-  // Get all workspace members except the actor
-  const members = await db.query.workspaceMembers.findMany({
-    where: eq(workspaceMembers.workspace_id, workspaceId),
-  })
+  // Get workspace members except the actor in a single query
+  const recipients = await db
+    .select({ user_id: workspaceMembers.user_id })
+    .from(workspaceMembers)
+    .where(
+      and(
+        eq(workspaceMembers.workspace_id, workspaceId),
+        ne(workspaceMembers.user_id, actorId)
+      )
+    )
 
-  const recipients = members.filter((m) => m.user_id !== actorId)
+  if (recipients.length === 0) return
 
-  // Check preferences for each recipient
+  // Single query to get all preferences for this workspace
   const prefs = await db.query.notificationPreferences.findMany({
     where: eq(notificationPreferences.workspace_id, workspaceId),
   })
@@ -47,19 +52,7 @@ export async function createNotification(
     message,
   }))
 
-  const inserted = await db.insert(notifications).values(values).returning()
-
-  // Push to SSE connections
-  for (const notification of inserted) {
-    const writer = sseConnections.get(notification.recipient_id)
-    if (writer) {
-      try {
-        writer.write(`data: ${JSON.stringify(notification)}\n\n`)
-      } catch {
-        // Connection closed, will be cleaned up
-      }
-    }
-  }
+  await db.insert(notifications).values(values)
 }
 
 export async function getNotifications(
@@ -87,14 +80,17 @@ export async function getNotifications(
 }
 
 export async function getUnreadCount(userId: string, workspaceId: string): Promise<number> {
-  const result = await db.query.notifications.findMany({
-    where: and(
-      eq(notifications.workspace_id, workspaceId),
-      eq(notifications.recipient_id, userId),
-      eq(notifications.is_read, false)
-    ),
-  })
-  return result.length
+  const [result] = await db
+    .select({ count: count() })
+    .from(notifications)
+    .where(
+      and(
+        eq(notifications.workspace_id, workspaceId),
+        eq(notifications.recipient_id, userId),
+        eq(notifications.is_read, false)
+      )
+    )
+  return result.count
 }
 
 export async function markAsRead(notificationId: string, userId: string): Promise<void> {

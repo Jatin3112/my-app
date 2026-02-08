@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useSession } from "next-auth/react"
 import { useWorkspace } from "@/hooks/use-workspace"
-import { getNotifications, getUnreadCount, markAsRead, markAllAsRead } from "@/lib/api/notifications"
+import { getNotifications, markAsRead, markAllAsRead } from "@/lib/api/notifications"
 
 type Notification = {
   id: string
@@ -18,6 +18,8 @@ type Notification = {
   created_at: Date
 }
 
+const POLL_INTERVAL = 30000 // 30 seconds
+
 export function useNotifications() {
   const { data: session } = useSession()
   const userId = (session?.user as any)?.id
@@ -26,69 +28,29 @@ export function useNotifications() {
 
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
-  const eventSourceRef = useRef<EventSource | null>(null)
-  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const retryCountRef = useRef(0)
+  const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined)
 
   const loadNotifications = useCallback(async () => {
     if (!userId || !workspaceId) return
     try {
-      const [data, count] = await Promise.all([
-        getNotifications(userId, workspaceId, { limit: 50 }),
-        getUnreadCount(userId, workspaceId),
-      ])
+      const data = await getNotifications(userId, workspaceId, { limit: 50 })
       setNotifications(data)
-      setUnreadCount(count)
+      setUnreadCount(data.filter((n) => !n.is_read).length)
     } catch (error) {
       console.error("Failed to load notifications:", error)
     }
   }, [userId, workspaceId])
 
-  // SSE connection
-  useEffect(() => {
-    if (!userId) return
-
-    function connect() {
-      const es = new EventSource("/api/notifications/stream")
-      eventSourceRef.current = es
-
-      es.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data)
-          if (data.type === "connected") return
-
-          // New notification received — refresh
-          if (data.workspace_id === workspaceId) {
-            setNotifications((prev) => [data, ...prev])
-            setUnreadCount((prev) => prev + 1)
-          }
-        } catch {}
-      }
-
-      es.onerror = () => {
-        es.close()
-        eventSourceRef.current = null
-        // Exponential backoff
-        const delay = Math.min(1000 * Math.pow(2, retryCountRef.current), 30000)
-        retryCountRef.current++
-        retryTimeoutRef.current = setTimeout(connect, delay)
-      }
-
-      es.onopen = () => {
-        retryCountRef.current = 0
-      }
-    }
-
-    connect()
-
-    return () => {
-      eventSourceRef.current?.close()
-      if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current)
-    }
-  }, [userId, workspaceId])
-
+  // Initial load + polling
   useEffect(() => {
     loadNotifications()
+
+    // Poll for new notifications
+    intervalRef.current = setInterval(loadNotifications, POLL_INTERVAL)
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
   }, [loadNotifications])
 
   async function handleMarkAsRead(notificationId: string) {

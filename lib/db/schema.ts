@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, boolean, date, doublePrecision, integer, uniqueIndex, json } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, boolean, date, doublePrecision, integer, uniqueIndex, index, json } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 export const users = pgTable("users", {
@@ -18,7 +18,9 @@ export const projects = pgTable("projects", {
   description: text("description"),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  workspaceIdx: index("projects_workspace_id_idx").on(table.workspace_id),
+}));
 
 export const todos = pgTable("todos", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -31,7 +33,10 @@ export const todos = pgTable("todos", {
   sort_order: integer("sort_order").default(0).notNull(),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  workspaceIdx: index("todos_workspace_id_idx").on(table.workspace_id),
+  projectIdx: index("todos_project_id_idx").on(table.project_id),
+}));
 
 export const timesheetEntries = pgTable("timesheet_entries", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -44,7 +49,10 @@ export const timesheetEntries = pgTable("timesheet_entries", {
   notes: text("notes"),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  workspaceIdx: index("timesheet_entries_workspace_id_idx").on(table.workspace_id),
+  userWorkspaceIdx: index("timesheet_entries_user_workspace_idx").on(table.user_id, table.workspace_id),
+}));
 
 export const workspaces = pgTable("workspaces", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -85,7 +93,9 @@ export const comments = pgTable("comments", {
   content: text("content").notNull(),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  todoIdx: index("comments_todo_id_idx").on(table.todo_id),
+}));
 
 export const notifications = pgTable("notifications", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -98,7 +108,10 @@ export const notifications = pgTable("notifications", {
   message: text("message").notNull(),
   is_read: boolean("is_read").default(false).notNull(),
   created_at: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  recipientWorkspaceIdx: index("notifications_recipient_workspace_idx").on(table.recipient_id, table.workspace_id),
+  recipientUnreadIdx: index("notifications_recipient_unread_idx").on(table.recipient_id, table.is_read),
+}));
 
 export const notificationPreferences = pgTable("notification_preferences", {
   id: uuid("id").defaultRandom().primaryKey(),

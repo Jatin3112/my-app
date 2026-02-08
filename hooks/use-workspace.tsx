@@ -29,6 +29,7 @@ const STORAGE_KEY = "last-workspace-id"
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession()
   const userId = (session?.user as any)?.id
+  const userName = session?.user?.name || session?.user?.email?.split("@")[0] || "My"
 
   const [workspaces, setWorkspaces] = useState<WorkspaceWithRole[]>([])
   const [currentWorkspace, setCurrentWorkspace] = useState<WorkspaceWithRole | null>(null)
@@ -42,13 +43,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
       if (data.length === 0) {
         // First-time user — create default workspace
-        const name = session?.user?.name || session?.user?.email?.split("@")[0] || "My"
-        const newWorkspace = await createWorkspace(userId, { name: `${name}'s Workspace` })
-        const reloaded = await getWorkspacesForUser(userId)
-        setWorkspaces(reloaded)
-        setCurrentWorkspace(reloaded[0])
+        const newWorkspace = await createWorkspace(userId, { name: `${userName}'s Workspace` })
+        const wsWithRole = { ...newWorkspace, role: "owner" } as WorkspaceWithRole
+        setWorkspaces([wsWithRole])
+        setCurrentWorkspace(wsWithRole)
         if (typeof window !== "undefined") {
-          localStorage.setItem(STORAGE_KEY, reloaded[0].id)
+          localStorage.setItem(STORAGE_KEY, newWorkspace.id)
         }
         return
       }
@@ -62,7 +62,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [userId, session])
+  }, [userId, userName])
 
   useEffect(() => {
     loadWorkspaces()
