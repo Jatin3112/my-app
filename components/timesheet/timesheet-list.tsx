@@ -47,13 +47,12 @@ import { DatePicker } from "@/components/ui/date-picker"
 import { VoiceInput } from "@/components/ui/voice-input"
 import { toast } from "sonner"
 import {
-  getTimesheetEntries,
   createTimesheetEntry,
   updateTimesheetEntry,
   deleteTimesheetEntry,
 } from "@/lib/api/timesheet"
-import { getProjects } from "@/lib/api/projects"
 import { bulkDeleteTimesheetEntries } from "@/lib/api/bulk-actions"
+import { loadTimesheetPageData } from "@/lib/api/loaders"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
 import type { TimesheetEntry, Project } from "@/lib/db/schema"
 import { useWorkspace } from "@/hooks/use-workspace"
@@ -114,20 +113,27 @@ export function TimesheetList() {
 
   useEffect(() => {
     if (userId && workspaceId) {
-      loadEntries()
-      loadProjects()
+      loadPageData()
     }
   }, [userId, workspaceId])
 
   useEffect(() => {
     if (userId && workspaceId) loadEntries()
-  }, [dateFrom, dateTo, workspaceId])
+  }, [dateFrom, dateTo])
 
-  async function loadEntries() {
+  // Refresh when an entry is created via Quick Capture
+  useEffect(() => {
+    const handler = () => loadPageData()
+    window.addEventListener("timesheet-created", handler)
+    return () => window.removeEventListener("timesheet-created", handler)
+  }, [userId, workspaceId])
+
+  async function loadPageData() {
     if (!userId || !workspaceId) return
     try {
-      const data = await getTimesheetEntries(workspaceId, userId, dateFrom, dateTo)
-      setEntries(data)
+      const data = await loadTimesheetPageData(workspaceId, userId, dateFrom, dateTo)
+      setEntries(data.entries)
+      setProjects(data.projects)
     } catch (error) {
       toast.error("Failed to load timesheet entries")
       console.error(error)
@@ -136,13 +142,13 @@ export function TimesheetList() {
     }
   }
 
-  async function loadProjects() {
+  async function loadEntries() {
     if (!userId || !workspaceId) return
     try {
-      const data = await getProjects(workspaceId, userId)
-      setProjects(data)
+      const data = await loadTimesheetPageData(workspaceId, userId, dateFrom, dateTo)
+      setEntries(data.entries)
     } catch (error) {
-      toast.error("Failed to load projects")
+      toast.error("Failed to load timesheet entries")
       console.error(error)
     }
   }
@@ -224,7 +230,7 @@ export function TimesheetList() {
   async function handleBulkDelete() {
     const ids = Array.from(selectedIds)
     try {
-      await bulkDeleteTimesheetEntries(ids)
+      await bulkDeleteTimesheetEntries(ids, workspaceId)
       toast.success(`${ids.length} entry(ies) deleted`)
       setSelectedIds(new Set())
       await loadEntries()

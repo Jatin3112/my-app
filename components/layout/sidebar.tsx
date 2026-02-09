@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, CheckSquare, Clock, Settings, PanelLeftClose, PanelLeft } from "lucide-react"
+import { Home, CheckSquare, Clock, FolderOpen, Settings, PanelLeftClose, PanelLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher"
@@ -10,6 +10,7 @@ import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher"
 const navItems = [
   { href: "/", label: "Home", icon: Home },
   { href: "/todos", label: "Todos", icon: CheckSquare },
+  { href: "/projects", label: "Projects", icon: FolderOpen },
   { href: "/timesheet", label: "Timesheet", icon: Clock },
   { href: "/workspace/settings", label: "Settings", icon: Settings },
 ]

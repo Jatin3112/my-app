@@ -5,6 +5,7 @@ import { todos, users, type Todo, type NewTodo } from '../db/schema'
 import { eq, and, asc, max } from 'drizzle-orm'
 import { requirePermission, getMemberRole } from '@/lib/auth/permissions'
 import { createNotification } from '@/lib/api/notifications'
+import { cacheDel } from '@/lib/cache'
 
 export async function getTodos(workspaceId: string, userId: string, project_id?: string): Promise<Todo[]> {
   await requirePermission(userId, workspaceId, "todo:view_all")
@@ -36,6 +37,8 @@ export async function createTodo(workspaceId: string, userId: string, todo: Omit
     } as any)
     .returning()
 
+  await cacheDel(`stats:${workspaceId}`)
+
   // Notification
   const actor = await db.query.users.findFirst({ where: eq(users.id, userId) })
   const actorName = actor?.name || actor?.email || "Someone"
@@ -55,6 +58,9 @@ export async function updateTodo(workspaceId: string, userId: string, id: string
     .set({ ...todo, updated_at: new Date() } as any)
     .where(eq(todos.id, id))
     .returning()
+
+  await cacheDel(`stats:${workspaceId}`)
+
   return data
 }
 
@@ -68,6 +74,8 @@ export async function toggleTodoComplete(workspaceId: string, userId: string, id
     .set({ completed, updated_at: new Date() })
     .where(eq(todos.id, id))
     .returning()
+
+  await cacheDel(`stats:${workspaceId}`)
 
   if (completed) {
     const actor = await db.query.users.findFirst({ where: eq(users.id, userId) })
@@ -86,6 +94,8 @@ export async function deleteTodo(workspaceId: string, userId: string, id: string
     await requirePermission(userId, workspaceId, "todo:delete_any")
   }
   await db.delete(todos).where(eq(todos.id, id))
+
+  await cacheDel(`stats:${workspaceId}`)
 
   const actor = await db.query.users.findFirst({ where: eq(users.id, userId) })
   const actorName = actor?.name || actor?.email || "Someone"

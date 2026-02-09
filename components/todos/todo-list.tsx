@@ -61,9 +61,9 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { getTodos, createTodo, updateTodo, toggleTodoComplete, deleteTodo } from "@/lib/api/todos"
-import { getProjects } from "@/lib/api/projects"
+import { createTodo, updateTodo, toggleTodoComplete, deleteTodo } from "@/lib/api/todos"
 import { bulkDeleteTodos, bulkToggleTodos } from "@/lib/api/bulk-actions"
+import { loadTodoPageData } from "@/lib/api/loaders"
 import { reorderTodos } from "@/lib/api/reorder"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
 import type { Todo, Project } from "@/lib/db/schema"
@@ -243,16 +243,23 @@ export function TodoList() {
 
   useEffect(() => {
     if (userId && workspaceId) {
-      loadTodos()
-      loadProjects()
+      loadPageData()
     }
   }, [userId, workspaceId])
 
-  async function loadTodos() {
+  // Refresh when a todo is created via Quick Capture
+  useEffect(() => {
+    const handler = () => loadPageData()
+    window.addEventListener("todo-created", handler)
+    return () => window.removeEventListener("todo-created", handler)
+  }, [userId, workspaceId])
+
+  async function loadPageData() {
     if (!userId || !workspaceId) return
     try {
-      const data = await getTodos(workspaceId, userId)
-      setTodos(data)
+      const data = await loadTodoPageData(workspaceId, userId)
+      setTodos(data.todos)
+      setProjects(data.projects)
     } catch (error) {
       toast.error("Failed to load todos")
       console.error(error)
@@ -261,13 +268,13 @@ export function TodoList() {
     }
   }
 
-  async function loadProjects() {
+  // Lightweight refresh for after mutations (reuses combined loader, projects hit cache)
+  async function loadTodos() {
     if (!userId || !workspaceId) return
     try {
-      const data = await getProjects(workspaceId, userId)
-      setProjects(data)
+      const data = await loadTodoPageData(workspaceId, userId)
+      setTodos(data.todos)
     } catch (error) {
-      toast.error("Failed to load projects")
       console.error(error)
     }
   }
@@ -360,7 +367,7 @@ export function TodoList() {
   async function handleBulkDelete() {
     const ids = Array.from(selectedIds)
     try {
-      await bulkDeleteTodos(ids)
+      await bulkDeleteTodos(ids, workspaceId)
       toast.success(`${ids.length} todo(s) deleted`)
       setSelectedIds(new Set())
       await loadTodos()
@@ -378,7 +385,7 @@ export function TodoList() {
       prev.map((t) => (ids.includes(t.id) ? { ...t, completed } : t))
     )
     try {
-      await bulkToggleTodos(ids, completed)
+      await bulkToggleTodos(ids, completed, workspaceId)
       setSelectedIds(new Set())
     } catch (error) {
       await loadTodos()

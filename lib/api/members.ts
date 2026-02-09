@@ -5,6 +5,7 @@ import { workspaceMembers, workspaces, users } from "@/lib/db/schema"
 import { and, eq } from "drizzle-orm"
 import { requirePermission, getMemberRole, type Role } from "@/lib/auth/permissions"
 import { createNotification } from "@/lib/api/notifications"
+import { cacheDel } from "@/lib/cache"
 
 export async function getWorkspaceMembers(workspaceId: string) {
   const members = await db.query.workspaceMembers.findMany({
@@ -45,6 +46,12 @@ export async function removeMember(
       )
     )
 
+  await cacheDel(
+    `role:${targetUserId}:${workspaceId}`,
+    `workspaces:${targetUserId}`,
+    `stats:${workspaceId}`,
+  )
+
   const actor = await db.query.users.findFirst({ where: eq(users.id, actorId) })
   const target = await db.query.users.findFirst({ where: eq(users.id, targetUserId) })
   const actorName = actor?.name || actor?.email || "Someone"
@@ -78,6 +85,8 @@ export async function updateMemberRole(
         eq(workspaceMembers.user_id, targetUserId)
       )
     )
+
+  await cacheDel(`role:${targetUserId}:${workspaceId}`)
 
   const actor = await db.query.users.findFirst({ where: eq(users.id, actorId) })
   const target = await db.query.users.findFirst({ where: eq(users.id, targetUserId) })
@@ -126,6 +135,14 @@ export async function transferOwnership(
     .update(workspaces)
     .set({ owner_id: newOwnerId, updated_at: new Date() })
     .where(eq(workspaces.id, workspaceId))
+
+  await cacheDel(
+    `role:${currentOwnerId}:${workspaceId}`,
+    `role:${newOwnerId}:${workspaceId}`,
+    `workspaces:${currentOwnerId}`,
+    `workspaces:${newOwnerId}`,
+    `stats:${workspaceId}`,
+  )
 }
 
 export async function leaveWorkspace(userId: string, workspaceId: string): Promise<void> {
@@ -142,4 +159,10 @@ export async function leaveWorkspace(userId: string, workspaceId: string): Promi
         eq(workspaceMembers.user_id, userId)
       )
     )
+
+  await cacheDel(
+    `role:${userId}:${workspaceId}`,
+    `workspaces:${userId}`,
+    `stats:${workspaceId}`,
+  )
 }

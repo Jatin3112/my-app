@@ -3,6 +3,7 @@
 import { db } from "@/lib/db"
 import { notifications, notificationPreferences, workspaceMembers } from "@/lib/db/schema"
 import { eq, and, desc, count, ne } from "drizzle-orm"
+import { cached, cacheInvalidate } from "@/lib/cache"
 
 export async function createNotification(
   workspaceId: string,
@@ -53,6 +54,8 @@ export async function createNotification(
   }))
 
   await db.insert(notifications).values(values)
+
+  await cacheInvalidate(`notif:*:${workspaceId}`)
 }
 
 export async function getNotifications(
@@ -62,21 +65,31 @@ export async function getNotifications(
 ) {
   const { unreadOnly = false, limit = 50, offset = 0 } = options
 
-  const conditions = [
-    eq(notifications.workspace_id, workspaceId),
-    eq(notifications.recipient_id, userId),
-  ]
+  const isDefaultQuery = !unreadOnly && limit === 50 && offset === 0
 
-  if (unreadOnly) {
-    conditions.push(eq(notifications.is_read, false))
+  const fetcher = async () => {
+    const conditions = [
+      eq(notifications.workspace_id, workspaceId),
+      eq(notifications.recipient_id, userId),
+    ]
+
+    if (unreadOnly) {
+      conditions.push(eq(notifications.is_read, false))
+    }
+
+    return db.query.notifications.findMany({
+      where: and(...conditions),
+      orderBy: [desc(notifications.created_at)],
+      limit,
+      offset,
+    })
   }
 
-  return db.query.notifications.findMany({
-    where: and(...conditions),
-    orderBy: [desc(notifications.created_at)],
-    limit,
-    offset,
-  })
+  if (isDefaultQuery) {
+    return cached(`notif:${userId}:${workspaceId}`, 10, fetcher)
+  }
+
+  return fetcher()
 }
 
 export async function getUnreadCount(userId: string, workspaceId: string): Promise<number> {
@@ -98,6 +111,8 @@ export async function markAsRead(notificationId: string, userId: string): Promis
     .update(notifications)
     .set({ is_read: true })
     .where(and(eq(notifications.id, notificationId), eq(notifications.recipient_id, userId)))
+
+  await cacheInvalidate(`notif:${userId}:*`)
 }
 
 export async function markAllAsRead(userId: string, workspaceId: string): Promise<void> {
@@ -111,4 +126,6 @@ export async function markAllAsRead(userId: string, workspaceId: string): Promis
         eq(notifications.is_read, false)
       )
     )
+
+  await cacheInvalidate(`notif:${userId}:${workspaceId}`)
 }

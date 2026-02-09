@@ -4,23 +4,30 @@ import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { FolderOpen, ListTodo, CheckCircle, Circle, Clock, CalendarClock, Users } from "lucide-react"
-import { getDashboardStats, type DashboardStats } from "@/lib/api/dashboard"
+import { loadDashboardData, type DashboardData } from "@/lib/api/loaders"
 import { useWorkspace } from "@/hooks/use-workspace"
 
-export function StatsCards() {
+type DashboardStats = DashboardData["stats"]
+
+interface StatsCardsProps {
+  stats?: DashboardStats | null
+}
+
+export function StatsCards({ stats: propStats }: StatsCardsProps = {}) {
   const { data: session } = useSession()
   const userId = (session?.user as any)?.id
 
   const { currentWorkspace } = useWorkspace()
   const workspaceId = currentWorkspace?.id
 
-  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [stats, setStats] = useState<DashboardStats | null>(propStats ?? null)
 
   useEffect(() => {
-    if (workspaceId) {
-      getDashboardStats(workspaceId).then(setStats).catch(console.error)
+    if (propStats !== undefined) return
+    if (workspaceId && userId) {
+      loadDashboardData(workspaceId, userId).then((d) => setStats(d.stats)).catch(console.error)
     }
-  }, [workspaceId])
+  }, [workspaceId, userId, propStats])
 
   if (!stats) {
     return (

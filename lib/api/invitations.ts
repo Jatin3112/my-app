@@ -6,6 +6,7 @@ import { and, eq } from "drizzle-orm"
 import { requirePermission, type Role } from "@/lib/auth/permissions"
 import { randomBytes } from "crypto"
 import { createNotification } from "@/lib/api/notifications"
+import { cacheDel } from "@/lib/cache"
 
 export async function inviteMember(
   actorId: string,
@@ -118,6 +119,8 @@ export async function acceptInvitation(token: string, userId: string) {
     .update(workspaceInvitations)
     .set({ status: "accepted" })
     .where(eq(workspaceInvitations.id, invitation.id))
+
+  await cacheDel(`workspaces:${userId}`, `stats:${invitation.workspace_id}`)
 
   const newMember = await db.query.users.findFirst({ where: eq(users.id, userId) })
   const memberName = newMember?.name || newMember?.email || "Someone"

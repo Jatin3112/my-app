@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { workspaces, workspaceMembers, type Workspace } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { requirePermission } from "@/lib/auth/permissions";
+import { cached, cacheDel, cacheInvalidate } from "@/lib/cache";
 
 // ---------------------------------------------------------------------------
 // Helper: generate a URL-friendly slug from a workspace name
@@ -45,6 +46,8 @@ export async function createWorkspace(
     role: "owner",
   });
 
+  await cacheDel(`workspaces:${userId}`);
+
   return workspace;
 }
 
@@ -53,17 +56,19 @@ export async function createWorkspace(
 // ---------------------------------------------------------------------------
 
 export async function getWorkspacesForUser(userId: string) {
-  const memberships = await db.query.workspaceMembers.findMany({
-    where: eq(workspaceMembers.user_id, userId),
-    with: {
-      workspace: true,
-    },
-  });
+  return cached(`workspaces:${userId}`, 300, async () => {
+    const memberships = await db.query.workspaceMembers.findMany({
+      where: eq(workspaceMembers.user_id, userId),
+      with: {
+        workspace: true,
+      },
+    });
 
-  return memberships.map((m) => ({
-    ...m.workspace,
-    role: m.role,
-  }));
+    return memberships.map((m) => ({
+      ...m.workspace,
+      role: m.role,
+    }));
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -100,6 +105,8 @@ export async function updateWorkspace(
     .where(eq(workspaces.id, workspaceId))
     .returning();
 
+  await cacheInvalidate("workspaces:*");
+
   return updated;
 }
 
@@ -114,4 +121,6 @@ export async function deleteWorkspace(
   await requirePermission(userId, workspaceId, "workspace:delete");
 
   await db.delete(workspaces).where(eq(workspaces.id, workspaceId));
+
+  await cacheInvalidate("workspaces:*");
 }

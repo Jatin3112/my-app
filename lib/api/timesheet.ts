@@ -4,6 +4,7 @@ import { db } from '../db'
 import { timesheetEntries, type TimesheetEntry, type NewTimesheetEntry } from '../db/schema'
 import { eq, and, gte, lte, desc } from 'drizzle-orm'
 import { requirePermission, getMemberRole } from '@/lib/auth/permissions'
+import { cacheDel } from '@/lib/cache'
 
 export async function getTimesheetEntries(workspaceId: string, userId: string, startDate?: string, endDate?: string): Promise<TimesheetEntry[]> {
   const role = await getMemberRole(userId, workspaceId)
@@ -32,6 +33,9 @@ export async function createTimesheetEntry(workspaceId: string, userId: string, 
       updated_at: new Date()
     } as any)
     .returning()
+
+  await cacheDel(`stats:${workspaceId}`)
+
   return data
 }
 
@@ -45,6 +49,9 @@ export async function updateTimesheetEntry(workspaceId: string, userId: string, 
     .set({ ...entry, updated_at: new Date() } as any)
     .where(eq(timesheetEntries.id, id))
     .returning()
+
+  await cacheDel(`stats:${workspaceId}`)
+
   return data
 }
 
@@ -55,4 +62,6 @@ export async function deleteTimesheetEntry(workspaceId: string, userId: string, 
     await requirePermission(userId, workspaceId, "timesheet:delete_any")
   }
   await db.delete(timesheetEntries).where(eq(timesheetEntries.id, id))
+
+  await cacheDel(`stats:${workspaceId}`)
 }

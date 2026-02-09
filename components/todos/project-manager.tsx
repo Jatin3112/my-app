@@ -31,24 +31,33 @@ import { getProjects, createProject, updateProject, deleteProject } from "@/lib/
 import type { Project } from "@/lib/db/schema"
 import { useWorkspace } from "@/hooks/use-workspace"
 
-export function ProjectManager() {
+interface ProjectManagerProps {
+  initialProjects?: Project[]
+}
+
+export function ProjectManager({ initialProjects }: ProjectManagerProps = {}) {
   const { data: session } = useSession()
   const userId = (session?.user as any)?.id
 
   const { currentWorkspace } = useWorkspace()
   const workspaceId = currentWorkspace?.id
 
-  const [projects, setProjects] = useState<Project[]>([])
+  const [projects, setProjects] = useState<Project[]>(initialProjects ?? [])
   const [isOpen, setIsOpen] = useState(false)
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(!initialProjects)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [formData, setFormData] = useState({ name: "", description: "" })
   const [isLoading, setIsLoading] = useState(false)
 
+  // Sync when initialProjects arrive from parent
   useEffect(() => {
-    if (userId && workspaceId) {
+    if (initialProjects) setProjects(initialProjects)
+  }, [initialProjects])
+
+  useEffect(() => {
+    if (!initialProjects && userId && workspaceId) {
       loadProjects()
     }
   }, [userId, workspaceId])

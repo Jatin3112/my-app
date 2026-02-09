@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Sidebar, MobileSidebarContent } from "./sidebar"
 import { Topbar } from "./topbar"
+import { QuickCaptureButton } from "@/components/quick-capture"
 import {
   Sheet,
   SheetContent,
@@ -36,6 +37,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+
+      <QuickCaptureButton />
     </div>
   )
 }

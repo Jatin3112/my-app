@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { workspaceMembers } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
+import { cached } from "@/lib/cache";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -63,20 +64,22 @@ export async function getMemberRole(
   userId: string,
   workspaceId: string,
 ): Promise<Role | null> {
-  const [member] = await db
-    .select({ role: workspaceMembers.role })
-    .from(workspaceMembers)
-    .where(
-      and(
-        eq(workspaceMembers.user_id, userId),
-        eq(workspaceMembers.workspace_id, workspaceId),
-      ),
-    )
-    .limit(1);
+  return cached(`role:${userId}:${workspaceId}`, 60, async () => {
+    const [member] = await db
+      .select({ role: workspaceMembers.role })
+      .from(workspaceMembers)
+      .where(
+        and(
+          eq(workspaceMembers.user_id, userId),
+          eq(workspaceMembers.workspace_id, workspaceId),
+        ),
+      )
+      .limit(1);
 
-  if (!member) return null;
+    if (!member) return null;
 
-  return member.role as Role;
+    return member.role as Role;
+  });
 }
 
 // ---------------------------------------------------------------------------

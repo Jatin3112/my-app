@@ -1,93 +1,73 @@
 "use client"
 
-import { AppShell } from "@/components/layout/app-shell";
-import { StatsCards } from "@/components/dashboard/stats-cards";
-import { ProjectManager } from "@/components/todos/project-manager";
-import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckSquare, Clock } from "lucide-react";
+import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
+import { AppShell } from "@/components/layout/app-shell"
+import { KeyMetrics } from "@/components/dashboard/key-metrics"
+import { TodoCompletionChart } from "@/components/dashboard/charts/todo-completion-chart"
+import { HoursByProjectChart } from "@/components/dashboard/charts/hours-by-project-chart"
+import { WeeklyActivityChart } from "@/components/dashboard/charts/weekly-activity-chart"
+import { RecentActivity } from "@/components/dashboard/recent-activity"
+import { ProjectProgress } from "@/components/dashboard/project-progress"
+import { useWorkspace } from "@/hooks/use-workspace"
+import { loadDashboardData, type DashboardData } from "@/lib/api/loaders"
+import { LayoutDashboard } from "lucide-react"
 
 export default function Home() {
+  const { data: session } = useSession()
+  const userId = (session?.user as any)?.id
+  const userName = session?.user?.name || "there"
+  const { currentWorkspace } = useWorkspace()
+  const workspaceId = currentWorkspace?.id
+  const workspaceName = currentWorkspace?.name || "your workspace"
+
+  const [data, setData] = useState<DashboardData | null>(null)
+
+  useEffect(() => {
+    if (workspaceId && userId) {
+      loadDashboardData(workspaceId, userId).then(setData).catch(console.error)
+    }
+  }, [workspaceId, userId])
+
   return (
     <AppShell>
-      <div className="max-w-6xl mx-auto space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-1">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Overview of your tasks and time tracking
-          </p>
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Greeting */}
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-primary/15">
+            <LayoutDashboard className="size-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Welcome back, {userName}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Here&apos;s what&apos;s happening in {workspaceName}
+            </p>
+          </div>
         </div>
 
-        <StatsCards />
+        {/* Key Metrics */}
+        <KeyMetrics stats={data?.stats ?? null} />
 
+        {/* Charts row */}
         <div className="grid md:grid-cols-2 gap-6">
-          <Link href="/todos" className="group">
-            <Card className="h-full transition-all hover:shadow-lg hover:border-primary">
-              <CardHeader>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                    <CheckSquare className="w-6 h-6" />
-                  </div>
-                  <CardTitle className="text-2xl">Todos</CardTitle>
-                </div>
-                <CardDescription className="text-base">
-                  Organize your tasks with projects
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-                    Create and manage todos
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-                    Organize by projects
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-                    Track completion status
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/timesheet" className="group">
-            <Card className="h-full transition-all hover:shadow-lg hover:border-primary">
-              <CardHeader>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                    <Clock className="w-6 h-6" />
-                  </div>
-                  <CardTitle className="text-2xl">Timesheet</CardTitle>
-                </div>
-                <CardDescription className="text-base">
-                  Track your work hours by date
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-                    Log daily work entries
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-                    Track hours per task
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-                    Add detailed notes
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-          </Link>
+          <TodoCompletionChart
+            completed={data?.stats?.completedTodos ?? 0}
+            pending={data?.stats?.pendingTodos ?? 0}
+          />
+          <HoursByProjectChart data={data?.chartData?.hoursByProject ?? []} />
         </div>
 
-        <ProjectManager />
+        {/* Weekly Activity — full width */}
+        <WeeklyActivityChart data={data?.chartData?.dailyHours ?? []} />
+
+        {/* Bottom row */}
+        <div className="grid md:grid-cols-2 gap-6">
+          <RecentActivity items={data?.recentActivity ?? []} />
+          <ProjectProgress projects={data?.projectProgress ?? []} />
+        </div>
       </div>
     </AppShell>
-  );
+  )
 }
