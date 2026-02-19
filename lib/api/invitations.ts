@@ -1,13 +1,15 @@
 "use server"
 
 import { db } from "@/lib/db"
-import { workspaceInvitations, workspaceMembers, users } from "@/lib/db/schema"
+import { workspaceInvitations, workspaceMembers, users, workspaces } from "@/lib/db/schema"
 import { and, eq } from "drizzle-orm"
 import { requirePermission, type Role } from "@/lib/auth/permissions"
 import { randomBytes } from "crypto"
 import { createNotification } from "@/lib/api/notifications"
 import { cacheDel } from "@/lib/cache"
 import { canAddMember } from "./plan-enforcement"
+import { sendEmail } from "@/lib/email"
+import { inviteEmailHtml } from "@/lib/email/templates/invite"
 
 export async function inviteMember(
   actorId: string,
@@ -61,6 +63,27 @@ export async function inviteMember(
     status: "pending",
     expires_at: expiresAt,
   })
+
+  // Send invitation email (best-effort, don't block on failure)
+  const [inviter, workspace] = await Promise.all([
+    db.query.users.findFirst({ where: eq(users.id, actorId) }),
+    db.query.workspaces.findFirst({ where: eq(workspaces.id, workspaceId) }),
+  ])
+  const inviterName = inviter?.name || inviter?.email || "A teammate"
+  const workspaceName = workspace?.name || "a workspace"
+  const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000"
+  const acceptUrl = `${baseUrl}/invite/${token}`
+
+  sendEmail({
+    to: data.email,
+    subject: `You've been invited to join ${workspaceName} on VoiceTask`,
+    html: inviteEmailHtml({
+      workspaceName,
+      inviterName,
+      acceptUrl,
+      role: data.role,
+    }),
+  }).catch(() => {})
 
   return { token }
 }

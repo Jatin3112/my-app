@@ -10,24 +10,32 @@ import { WeeklyActivityChart } from "@/components/dashboard/charts/weekly-activi
 import { RecentActivity } from "@/components/dashboard/recent-activity"
 import { ProjectProgress } from "@/components/dashboard/project-progress"
 import { useWorkspace } from "@/hooks/use-workspace"
-import { loadDashboardData, type DashboardData } from "@/lib/api/loaders"
+import { loadHomePageData, type DashboardData } from "@/lib/api/loaders"
 import { LayoutDashboard } from "lucide-react"
+
+const STORAGE_KEY = "last-workspace-id"
 
 export default function Home() {
   const { data: session } = useSession()
   const userId = (session?.user as any)?.id
   const userName = session?.user?.name || "there"
-  const { currentWorkspace } = useWorkspace()
-  const workspaceId = currentWorkspace?.id
+  const { seedWorkspaces, currentWorkspace } = useWorkspace()
   const workspaceName = currentWorkspace?.name || "your workspace"
 
   const [data, setData] = useState<DashboardData | null>(null)
 
   useEffect(() => {
-    if (workspaceId && userId) {
-      loadDashboardData(workspaceId, userId).then(setData).catch(console.error)
-    }
-  }, [workspaceId, userId])
+    if (!userId) return
+    const lastId = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : undefined
+    loadHomePageData(userId, userName, lastId || undefined).then(({ workspaces, currentWorkspace: current, ...dashboardData }) => {
+      seedWorkspaces(workspaces, current)
+      setData(dashboardData)
+      // Persist the selected workspace
+      if (typeof window !== "undefined") {
+        localStorage.setItem(STORAGE_KEY, current.id)
+      }
+    }).catch(console.error)
+  }, [userId, userName, seedWorkspaces])
 
   return (
     <AppShell>

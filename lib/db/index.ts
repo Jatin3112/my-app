@@ -11,14 +11,16 @@ const globalForDb = globalThis as unknown as {
   pgClient: ReturnType<typeof postgres> | undefined;
 };
 
+const isLocalhost = connectionString.includes("localhost") || connectionString.includes("127.0.0.1");
+
 const client =
   globalForDb.pgClient ??
   postgres(connectionString, {
     max: isProduction ? 5 : 10,
     idle_timeout: 20,
     connect_timeout: 10,
-    prepare: !isProduction, // disable prepared statements for Neon pooling in prod
-    ssl: isProduction ? "require" : false,
+    prepare: isLocalhost, // prepared statements work locally, not through Neon's pooler
+    ssl: isLocalhost ? false : "require",
   });
 
 if (!isProduction) {

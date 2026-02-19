@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react"
 import { useSession } from "next-auth/react"
 import { getWorkspacesForUser, createWorkspace } from "@/lib/api/workspaces"
 
@@ -19,12 +19,18 @@ type WorkspaceContextType = {
   currentWorkspace: WorkspaceWithRole | null
   switchWorkspace: (workspaceId: string) => void
   refreshWorkspaces: () => Promise<void>
+  seedWorkspaces: (data: WorkspaceWithRole[], current: WorkspaceWithRole) => void
   isLoading: boolean
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | null>(null)
 
 const STORAGE_KEY = "last-workspace-id"
+
+function persistWorkspaceId(id: string) {
+  localStorage.setItem(STORAGE_KEY, id)
+  document.cookie = `${STORAGE_KEY}=${id};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`
+}
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession()
@@ -34,6 +40,15 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [workspaces, setWorkspaces] = useState<WorkspaceWithRole[]>([])
   const [currentWorkspace, setCurrentWorkspace] = useState<WorkspaceWithRole | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const seededRef = useRef(false)
+
+  const seedWorkspaces = useCallback((data: WorkspaceWithRole[], current: WorkspaceWithRole) => {
+    seededRef.current = true
+    setWorkspaces(data)
+    setCurrentWorkspace(current)
+    persistWorkspaceId(current.id)
+    setIsLoading(false)
+  }, [])
 
   const loadWorkspaces = useCallback(async () => {
     if (!userId) return
@@ -47,9 +62,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         const wsWithRole = { ...newWorkspace, role: "owner" } as WorkspaceWithRole
         setWorkspaces([wsWithRole])
         setCurrentWorkspace(wsWithRole)
-        if (typeof window !== "undefined") {
-          localStorage.setItem(STORAGE_KEY, newWorkspace.id)
-        }
+        persistWorkspaceId(newWorkspace.id)
         return
       }
 
@@ -65,6 +78,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   }, [userId, userName])
 
   useEffect(() => {
+    if (seededRef.current) return // skip if page already seeded workspace data
     loadWorkspaces()
   }, [loadWorkspaces])
 
@@ -72,9 +86,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     const workspace = workspaces.find((w) => w.id === workspaceId)
     if (workspace) {
       setCurrentWorkspace(workspace)
-      if (typeof window !== "undefined") {
-        localStorage.setItem(STORAGE_KEY, workspaceId)
-      }
+      persistWorkspaceId(workspaceId)
     }
   }
 
@@ -85,6 +97,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         currentWorkspace,
         switchWorkspace,
         refreshWorkspaces: loadWorkspaces,
+        seedWorkspaces,
         isLoading,
       }}
     >

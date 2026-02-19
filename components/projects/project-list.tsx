@@ -40,26 +40,55 @@ import type { Project } from "@/lib/db/schema"
 import { useWorkspace } from "@/hooks/use-workspace"
 import { formatDistanceToNow } from "date-fns"
 
-export function ProjectList() {
+type WorkspaceWithRole = {
+  id: string
+  name: string
+  slug: string
+  owner_id: string
+  role: string
+  created_at: Date
+  updated_at: Date
+}
+
+type ProjectListProps = {
+  initialProjects?: Project[]
+  workspaces?: WorkspaceWithRole[]
+  currentWorkspace?: WorkspaceWithRole
+}
+
+export function ProjectList({ initialProjects, workspaces: initialWorkspaces, currentWorkspace: initialCurrentWorkspace }: ProjectListProps) {
   const { data: session } = useSession()
   const userId = (session?.user as any)?.id
-  const { currentWorkspace } = useWorkspace()
+  const { currentWorkspace, seedWorkspaces } = useWorkspace()
   const workspaceId = currentWorkspace?.id
 
-  const [projects, setProjects] = useState<Project[]>([])
+  // Seed workspace provider with server-fetched data
+  const seededRef = useRef(false)
+  useEffect(() => {
+    if (initialWorkspaces && initialCurrentWorkspace && !seededRef.current) {
+      seededRef.current = true
+      seedWorkspaces(initialWorkspaces, initialCurrentWorkspace)
+    }
+  }, [initialWorkspaces, initialCurrentWorkspace, seedWorkspaces])
+
+  const [projects, setProjects] = useState<Project[]>(initialProjects ?? [])
   const [isOpen, setIsOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
-  const [isInitialLoading, setIsInitialLoading] = useState(true)
+  const [isInitialLoading, setIsInitialLoading] = useState(!initialProjects)
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({ name: "", description: "" })
   const searchInputRef = useRef<HTMLInputElement>(null)
 
+  const initialWorkspaceIdRef = useRef(initialCurrentWorkspace?.id)
   useEffect(() => {
-    if (userId && workspaceId) {
-      loadProjects()
+    if (!userId || !workspaceId) return
+    if (initialProjects && workspaceId === initialWorkspaceIdRef.current) {
+      initialWorkspaceIdRef.current = undefined
+      return
     }
+    loadProjects()
   }, [userId, workspaceId])
 
   async function loadProjects() {

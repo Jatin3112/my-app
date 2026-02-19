@@ -5,13 +5,13 @@ import { useSession } from "next-auth/react";
 import { useWorkspace } from "@/hooks/use-workspace";
 import { AppShell } from "@/components/layout/app-shell";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UsageMeter } from "@/components/billing/usage-meter";
-import { getWorkspaceSubscriptionStatus, getUsageInfo, getAllPlans } from "@/lib/api/subscriptions";
+import { PricingCards } from "@/components/billing/pricing-cards";
+import { getWorkspaceSubscriptionStatus, getUsageInfo, getAllPlans, getPaymentHistory } from "@/lib/api/subscriptions";
 import type { UsageInfo } from "@/lib/api/subscriptions";
-import type { Plan } from "@/lib/db/schema";
-import { Crown, Check } from "lucide-react";
+import type { Plan, PaymentRecord } from "@/lib/db/schema";
+import { Crown } from "lucide-react";
 
 export default function BillingPage() {
   const { data: session } = useSession();
@@ -20,6 +20,7 @@ export default function BillingPage() {
 
   const [plans, setPlans] = useState<Plan[]>([]);
   const [usage, setUsage] = useState<UsageInfo | null>(null);
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [subStatus, setSubStatus] = useState<{
     isActive: boolean;
     status: string;
@@ -27,21 +28,34 @@ export default function BillingPage() {
     trialDaysRemaining: number;
     isTrialing: boolean;
   } | null>(null);
-  const [currency, setCurrency] = useState<"INR" | "USD">("INR");
+  const [currency, setCurrency] = useState<"INR" | "USD">(() => {
+    if (typeof navigator !== "undefined") {
+      const locale = navigator.language || "";
+      if (locale.endsWith("-IN") || locale === "hi") return "INR";
+    }
+    return "USD";
+  });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  function loadData() {
     if (!currentWorkspace?.id || !userId) return;
+    setLoading(true);
     Promise.all([
       getWorkspaceSubscriptionStatus(currentWorkspace.id),
       getUsageInfo(currentWorkspace.id, userId),
       getAllPlans(),
-    ]).then(([status, usageData, planList]) => {
+      getPaymentHistory(currentWorkspace.id),
+    ]).then(([status, usageData, planList, paymentList]) => {
       setSubStatus({ ...status, planName: status.plan?.name ?? "No Plan" });
       setUsage(usageData);
       setPlans(planList);
+      setPayments(paymentList);
       setLoading(false);
     });
+  }
+
+  useEffect(() => {
+    loadData();
   }, [currentWorkspace?.id, userId]);
 
   if (loading) {
@@ -108,70 +122,55 @@ export default function BillingPage() {
             </div>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-3">
-            {plans.map((plan) => {
-              const isCurrent = subStatus?.planName === plan.name;
-              const price = currency === "INR" ? plan.price_inr : plan.price_usd;
-              const symbol = currency === "INR" ? "₹" : "$";
-              const features = (plan.features as string[]) ?? [];
-
-              return (
-                <Card key={plan.id} className={`relative ${isCurrent ? "border-primary ring-2 ring-primary/20" : ""}`}>
-                  {isCurrent && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <Badge>Current Plan</Badge>
-                    </div>
-                  )}
-                  <CardHeader>
-                    <CardTitle>{plan.name}</CardTitle>
-                    <CardDescription>
-                      <span className="text-3xl font-bold text-foreground">{symbol}{price}</span>
-                      <span className="text-muted-foreground">/month</span>
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span>{plan.max_users === -1 ? "Unlimited" : plan.max_users} user{plan.max_users !== 1 ? "s" : ""}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span>{plan.max_projects === -1 ? "Unlimited" : plan.max_projects} project{plan.max_projects !== 1 ? "s" : ""}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span>{plan.max_workspaces === -1 ? "Unlimited" : plan.max_workspaces} workspace{plan.max_workspaces !== 1 ? "s" : ""}</span>
-                      </div>
-                      {features.map((f) => (
-                        <div key={f} className="flex items-center gap-2">
-                          <Check className="h-4 w-4 text-green-500" />
-                          <span>{f.replace(/_/g, " ")}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <Button
-                      className="w-full"
-                      variant={isCurrent ? "outline" : "default"}
-                      disabled={isCurrent}
-                    >
-                      {isCurrent ? "Current Plan" : "Upgrade"}
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+          <PricingCards
+            plans={plans}
+            currentPlanName={subStatus?.planName ?? null}
+            currency={currency}
+            workspaceId={currentWorkspace?.id ?? ""}
+            onSubscriptionChange={loadData}
+          />
         </div>
 
-        {/* Payment History Placeholder */}
+        {/* Payment History */}
         <Card>
           <CardHeader>
             <CardTitle>Payment History</CardTitle>
-            <CardDescription>Your billing history will appear here once you subscribe.</CardDescription>
+            <CardDescription>
+              {payments.length > 0
+                ? "Your recent transactions"
+                : "Your billing history will appear here once you subscribe."}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">No payments yet.</p>
+            {payments.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No payments yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {payments.map((p) => (
+                  <div key={p.id} className="flex items-center justify-between border-b pb-3 last:border-0">
+                    <div>
+                      <div className="text-sm font-medium">{p.description ?? "Payment"}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(p.created_at).toLocaleDateString("en-IN", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium">
+                        {p.currency === "INR" ? "₹" : "$"}
+                        {(p.amount / 100).toFixed(2)}
+                      </div>
+                      <Badge variant={p.status === "captured" ? "default" : "secondary"} className="text-xs">
+                        {p.status}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

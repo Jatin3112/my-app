@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { subscriptions, plans, workspaceMembers, projects, workspaces } from "@/lib/db/schema";
-import { eq, and, count } from "drizzle-orm";
+import { subscriptions, plans, workspaceMembers, projects, workspaces, paymentHistory } from "@/lib/db/schema";
+import { eq, and, count, desc } from "drizzle-orm";
 import { cached, cacheDel } from "@/lib/cache";
 import type { Plan, Subscription } from "@/lib/db/schema";
 
@@ -169,4 +169,15 @@ export async function getWorkspaceSubscriptionStatus(workspaceId: string): Promi
     trialDaysRemaining: daysLeft,
     isTrialing: sub.status === "trialing",
   };
+}
+
+// ─── Payment History ───
+
+export async function getPaymentHistory(workspaceId: string) {
+  return db
+    .select()
+    .from(paymentHistory)
+    .where(eq(paymentHistory.workspace_id, workspaceId))
+    .orderBy(desc(paymentHistory.created_at))
+    .limit(20);
 }

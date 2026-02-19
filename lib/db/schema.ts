@@ -59,6 +59,7 @@ export const workspaces = pgTable("workspaces", {
   name: text("name").notNull(),
   slug: text("slug").unique().notNull(),
   owner_id: uuid("owner_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  stripe_customer_id: text("stripe_customer_id"),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -136,6 +137,8 @@ export const plans = pgTable("plans", {
   max_workspaces: integer("max_workspaces").notNull(),
   features: json("features").$type<string[]>().default([]),
   is_active: boolean("is_active").default(true).notNull(),
+  razorpay_plan_id: text("razorpay_plan_id"),
+  stripe_price_id: text("stripe_price_id"),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 });

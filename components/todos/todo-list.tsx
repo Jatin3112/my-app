@@ -67,9 +67,26 @@ import { loadTodoPageData } from "@/lib/api/loaders"
 import { reorderTodos } from "@/lib/api/reorder"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
 import type { Todo, Project } from "@/lib/db/schema"
+import type { TodoPageData } from "@/lib/api/loaders"
 import { useWorkspace } from "@/hooks/use-workspace"
 import { CommentList } from "@/components/comments/comment-list"
 import { Separator } from "@/components/ui/separator"
+
+type WorkspaceWithRole = {
+  id: string
+  name: string
+  slug: string
+  owner_id: string
+  role: string
+  created_at: Date
+  updated_at: Date
+}
+
+type TodoListProps = {
+  initialData?: TodoPageData
+  workspaces?: WorkspaceWithRole[]
+  currentWorkspace?: WorkspaceWithRole
+}
 
 type StatusFilter = "all" | "completed" | "pending"
 
@@ -169,15 +186,24 @@ function SortableRow({
   )
 }
 
-export function TodoList() {
+export function TodoList({ initialData, workspaces: initialWorkspaces, currentWorkspace: initialCurrentWorkspace }: TodoListProps) {
   const { data: session } = useSession()
   const userId = (session?.user as any)?.id
 
-  const { currentWorkspace } = useWorkspace()
+  const { currentWorkspace, seedWorkspaces } = useWorkspace()
   const workspaceId = currentWorkspace?.id
 
-  const [todos, setTodos] = useState<Todo[]>([])
-  const [projects, setProjects] = useState<Project[]>([])
+  // Seed workspace provider with server-fetched data (runs before provider's own useEffect)
+  const seededRef = useRef(false)
+  useEffect(() => {
+    if (initialWorkspaces && initialCurrentWorkspace && !seededRef.current) {
+      seededRef.current = true
+      seedWorkspaces(initialWorkspaces, initialCurrentWorkspace)
+    }
+  }, [initialWorkspaces, initialCurrentWorkspace, seedWorkspaces])
+
+  const [todos, setTodos] = useState<Todo[]>(initialData?.todos ?? [])
+  const [projects, setProjects] = useState<Project[]>(initialData?.projects ?? [])
   const [isOpen, setIsOpen] = useState(false)
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null)
   const [filterProjectId, setFilterProjectId] = useState<string>("all")
@@ -185,7 +211,7 @@ export function TodoList() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
-  const [isInitialLoading, setIsInitialLoading] = useState(true)
+  const [isInitialLoading, setIsInitialLoading] = useState(!initialData)
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -241,10 +267,15 @@ export function TodoList() {
     }
   }
 
+  const initialWorkspaceIdRef = useRef(initialCurrentWorkspace?.id)
   useEffect(() => {
-    if (userId && workspaceId) {
-      loadPageData()
+    if (!userId || !workspaceId) return
+    // Skip fetch if we already have server-provided data for this workspace
+    if (initialData && workspaceId === initialWorkspaceIdRef.current) {
+      initialWorkspaceIdRef.current = undefined // only skip once
+      return
     }
+    loadPageData()
   }, [userId, workspaceId])
 
   // Refresh when a todo is created via Quick Capture

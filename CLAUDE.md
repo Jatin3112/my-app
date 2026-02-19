@@ -105,11 +105,11 @@ npm run db:seed         # Seed default plans
 - [x] T-1.1.12: Create `app/billing/page.tsx` — billing dashboard showing plan, usage, payment history
 - [x] T-1.1.13: Create `components/billing/upgrade-wall.tsx` — lock screen shown when trial expires or limits hit
 - [x] T-1.1.14: Run `db:generate` and `db:push` for new schema
-- [ ] T-1.1.15: Set up Vitest + React Testing Library (install deps, create vitest.config.ts, test helpers)
-- [ ] T-1.1.16: Write unit tests for `lib/api/subscriptions.ts` (getSubscription, createTrialSubscription, isTrialExpired, getTrialDaysRemaining, getPlanLimits, isSubscriptionActive, getWorkspaceSubscriptionStatus)
-- [ ] T-1.1.17: Write unit tests for `lib/api/plan-enforcement.ts` (canAddMember, canAddProject, canCreateWorkspace — at limit, under limit, unlimited, expired sub)
-- [ ] T-1.1.18: Write component tests for billing components (PlanBadge, UsageMeter, TrialBanner, UpgradeWall — all visual states)
-- [ ] T-1.1.19: Run full test suite + coverage report, verify build passes
+- [x] T-1.1.15: Set up Vitest + React Testing Library (install deps, create vitest.config.ts, test helpers)
+- [x] T-1.1.16: Write unit tests for `lib/api/subscriptions.ts` (getSubscription, createTrialSubscription, isTrialExpired, getTrialDaysRemaining, getPlanLimits, isSubscriptionActive, getWorkspaceSubscriptionStatus)
+- [x] T-1.1.17: Write unit tests for `lib/api/plan-enforcement.ts` (canAddMember, canAddProject, canCreateWorkspace — at limit, under limit, unlimited, expired sub)
+- [x] T-1.1.18: Write component tests for billing components (PlanBadge, UsageMeter, TrialBanner, UpgradeWall — all visual states)
+- [x] T-1.1.19: Run full test suite + coverage report, verify build passes
 
 #### Sprint 1.2 — Razorpay Integration (Week 2-3)
 
@@ -119,18 +119,18 @@ npm run db:seed         # Seed default plans
 - US-1.6: As a subscriber, I can cancel my subscription and it stays active until period end
 
 **Tasks:**
-- [ ] T-1.2.1: Install `razorpay` npm package, add env vars (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET)
-- [ ] T-1.2.2: Create `lib/payments/razorpay.ts` — Razorpay client init, plan creation, subscription helpers
-- [ ] T-1.2.3: Create `app/api/payments/razorpay/create-subscription/route.ts` — creates Razorpay subscription for a plan
-- [ ] T-1.2.4: Create `app/api/payments/razorpay/webhook/route.ts` — handles subscription.activated, payment.captured, subscription.cancelled events
-- [ ] T-1.2.5: Create `components/billing/razorpay-checkout.tsx` — client-side Razorpay checkout button (loads Razorpay script)
-- [ ] T-1.2.6: Create `components/billing/pricing-cards.tsx` — shows 3 plan cards with "Subscribe" CTA
-- [ ] T-1.2.7: Wire up plan upgrade/downgrade logic (proration handling)
-- [ ] T-1.2.8: Wire up cancellation flow — cancel at period end, reactivation option
-- [ ] T-1.2.9: Add Razorpay webhook signature verification for security
-- [ ] T-1.2.10: Write unit tests for Razorpay server actions (create subscription, webhook handler, signature verification)
-- [ ] T-1.2.11: Write component tests for RazorpayCheckout and PricingCards (render states, button interactions)
-- [ ] T-1.2.12: Test full flow: trial → checkout → payment → active subscription → renewal
+- [x] T-1.2.1: Install `razorpay` npm package, add env vars (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET)
+- [x] T-1.2.2: Create `lib/payments/razorpay.ts` — Razorpay client init, plan creation, subscription helpers
+- [x] T-1.2.3: Create `app/api/payments/razorpay/create-subscription/route.ts` — creates Razorpay subscription for a plan
+- [x] T-1.2.4: Create `app/api/payments/razorpay/webhook/route.ts` — handles subscription.activated, payment.captured, subscription.cancelled events
+- [x] T-1.2.5: Create `components/billing/razorpay-checkout.tsx` — client-side Razorpay checkout button (loads Razorpay script)
+- [x] T-1.2.6: Create `components/billing/pricing-cards.tsx` — shows 3 plan cards with "Subscribe" CTA
+- [x] T-1.2.7: Wire up plan upgrade/downgrade logic (proration handling)
+- [x] T-1.2.8: Wire up cancellation flow — cancel at period end, reactivation option
+- [x] T-1.2.9: Add Razorpay webhook signature verification for security
+- [x] T-1.2.10: Write unit tests for Razorpay server actions (create subscription, webhook handler, signature verification)
+- [x] T-1.2.11: Write component tests for RazorpayCheckout and PricingCards (render states, button interactions)
+- [x] T-1.2.12: Test full flow: trial → checkout → payment → active subscription → renewal
 
 #### Sprint 1.3 — Stripe Integration + Email (Week 3-4)
 
@@ -140,20 +140,20 @@ npm run db:seed         # Seed default plans
 - US-1.9: As a user, I receive email warnings before my trial expires
 
 **Tasks:**
-- [ ] T-1.3.1: Install `stripe` npm package, add env vars (STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET)
-- [ ] T-1.3.2: Create `lib/payments/stripe.ts` — Stripe client, product/price creation, subscription helpers
-- [ ] T-1.3.3: Create `app/api/payments/stripe/create-checkout/route.ts` — Stripe Checkout Session
-- [ ] T-1.3.4: Create `app/api/payments/stripe/webhook/route.ts` — handles checkout.session.completed, invoice.paid, customer.subscription.deleted
-- [ ] T-1.3.5: Create `app/billing/success/page.tsx` and `app/billing/cancel/page.tsx` — post-checkout redirects
-- [ ] T-1.3.6: Add INR/USD currency toggle to pricing cards (auto-detect by locale, manual override)
-- [ ] T-1.3.7: Install `nodemailer`, add env vars (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS)
-- [ ] T-1.3.8: Create `lib/email/index.ts` — sendEmail() utility with Nodemailer + Gmail SMTP
-- [ ] T-1.3.9: Create `lib/email/templates/` — invite.ts, trial-expiry.ts, welcome.ts, payment-receipt.ts (HTML email templates)
-- [ ] T-1.3.10: Wire invite emails into `lib/api/invitations.ts` — send real email when inviting
-- [ ] T-1.3.11: Create cron/scheduled function for trial expiry warning emails (day 10, 12, 13, 14)
-- [ ] T-1.3.12: Write unit tests for Stripe server actions (create checkout, webhook handler, signature verification)
-- [ ] T-1.3.13: Write unit tests for email module (sendEmail, template rendering, invite email, trial expiry email)
-- [ ] T-1.3.14: Test full Stripe flow: checkout → webhook → subscription active → renewal
+- [x] T-1.3.1: Install `stripe` npm package, add env vars (STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET)
+- [x] T-1.3.2: Create `lib/payments/stripe.ts` — Stripe client, product/price creation, subscription helpers
+- [x] T-1.3.3: Create `app/api/payments/stripe/create-checkout/route.ts` — Stripe Checkout Session
+- [x] T-1.3.4: Create `app/api/payments/stripe/webhook/route.ts` — handles checkout.session.completed, invoice.paid, customer.subscription.deleted
+- [x] T-1.3.5: Create `app/billing/success/page.tsx` and `app/billing/cancel/page.tsx` — post-checkout redirects
+- [x] T-1.3.6: Add INR/USD currency toggle to pricing cards (auto-detect by locale, manual override)
+- [x] T-1.3.7: Install `nodemailer`, add env vars (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS)
+- [x] T-1.3.8: Create `lib/email/index.ts` — sendEmail() utility with Nodemailer + Gmail SMTP
+- [x] T-1.3.9: Create `lib/email/templates/` — invite.ts, trial-expiry.ts, welcome.ts, payment-receipt.ts (HTML email templates)
+- [x] T-1.3.10: Wire invite emails into `lib/api/invitations.ts` — send real email when inviting
+- [x] T-1.3.11: Create cron/scheduled function for trial expiry warning emails (day 4, 2, 1, 0)
+- [x] T-1.3.12: Write unit tests for Stripe server actions (create checkout, webhook handler, signature verification)
+- [x] T-1.3.13: Write unit tests for email module (sendEmail, template rendering, invite email, trial expiry email)
+- [x] T-1.3.14: Test full Stripe flow: checkout → webhook → subscription active → renewal
 
 ---
 
@@ -386,9 +386,9 @@ npm run db:seed         # Seed default plans
 
 | Phase | Sprint | Status | Completed |
 |-------|--------|--------|-----------|
-| 1. Revenue | 1.1 DB & Plans + Tests | IN PROGRESS | 14/19 |
-| 1. Revenue | 1.2 Razorpay | TODO | 0/12 |
-| 1. Revenue | 1.3 Stripe + Email | TODO | 0/14 |
+| 1. Revenue | 1.1 DB & Plans + Tests | DONE | 19/19 |
+| 1. Revenue | 1.2 Razorpay | DONE | 12/12 |
+| 1. Revenue | 1.3 Stripe + Email | DONE | 14/14 |
 | 2. Auth | 2.1 OAuth + Reset | TODO | 0/19 |
 | 3. AI | 3.1 Voice Parsing | TODO | 0/13 |
 | 3. AI | 3.2 Priorities + Dates | TODO | 0/13 |
@@ -398,7 +398,7 @@ npm run db:seed         # Seed default plans
 | 5. Export | 5.2 Recurring + GDPR | TODO | 0/14 |
 | 6. Production | 6.1 Infra + Monitoring | TODO | 0/14 |
 | 6. Production | 6.2 Security + Polish | TODO | 0/13 |
-| **TOTAL** | **12 sprints** | **IN PROGRESS** | **14/170** |
+| **TOTAL** | **12 sprints** | **IN PROGRESS** | **45/170** |
 
 ---
 
