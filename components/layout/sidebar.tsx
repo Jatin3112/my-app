@@ -2,16 +2,18 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, CheckSquare, Clock, FolderOpen, Settings, PanelLeftClose, PanelLeft } from "lucide-react"
+import { Home, CheckSquare, Clock, FolderOpen, Settings, CreditCard, PanelLeftClose, PanelLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher"
+import { PlanBadge } from "@/components/billing/plan-badge"
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
   { href: "/todos", label: "Todos", icon: CheckSquare },
   { href: "/projects", label: "Projects", icon: FolderOpen },
   { href: "/timesheet", label: "Timesheet", icon: Clock },
+  { href: "/billing", label: "Billing", icon: CreditCard },
   { href: "/workspace/settings", label: "Settings", icon: Settings },
 ]
 
@@ -42,6 +44,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <div className="p-2 border-b">
         <WorkspaceSwitcher collapsed={collapsed} />
       </div>
+
+      {!collapsed && <PlanBadge />}
 
       <nav className="flex-1 p-2 space-y-1">
         {navItems.map((item) => {
@@ -77,6 +81,7 @@ export function MobileSidebarContent({ onNavigate }: { onNavigate: () => void })
       <div className="p-2 border-b">
         <WorkspaceSwitcher />
       </div>
+      <PlanBadge />
       <nav className="flex flex-col gap-1 p-2">
         {navItems.map((item) => {
           const isActive = pathname === item.href

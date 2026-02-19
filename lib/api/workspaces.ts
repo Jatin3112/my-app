@@ -5,6 +5,8 @@ import { workspaces, workspaceMembers, type Workspace } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { requirePermission } from "@/lib/auth/permissions";
 import { cached, cacheDel, cacheInvalidate } from "@/lib/cache";
+import { createTrialSubscription } from "./subscriptions";
+import { canCreateWorkspace } from "./plan-enforcement";
 
 // ---------------------------------------------------------------------------
 // Helper: generate a URL-friendly slug from a workspace name
@@ -29,6 +31,9 @@ export async function createWorkspace(
   userId: string,
   data: { name: string },
 ): Promise<Workspace> {
+  const wsCheck = await canCreateWorkspace(userId);
+  if (!wsCheck.allowed) throw new Error(wsCheck.reason);
+
   const slug = generateSlug(data.name);
 
   const [workspace] = await db
@@ -45,6 +50,8 @@ export async function createWorkspace(
     user_id: userId,
     role: "owner",
   });
+
+  await createTrialSubscription(workspace.id);
 
   await cacheDel(`workspaces:${userId}`);
 

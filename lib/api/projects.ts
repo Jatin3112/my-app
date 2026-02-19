@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm'
 import { requirePermission } from '@/lib/auth/permissions'
 import { createNotification } from '@/lib/api/notifications'
 import { cached, cacheDel } from '@/lib/cache'
+import { canAddProject } from "./plan-enforcement"
 
 export async function getProjects(workspaceId: string, userId: string): Promise<Project[]> {
   await requirePermission(userId, workspaceId, "todo:view_all")
@@ -19,6 +20,10 @@ export async function getProjects(workspaceId: string, userId: string): Promise<
 
 export async function createProject(workspaceId: string, userId: string, project: Omit<NewProject, 'user_id' | 'workspace_id'>): Promise<Project> {
   await requirePermission(userId, workspaceId, "project:create")
+
+  const projectCheck = await canAddProject(workspaceId);
+  if (!projectCheck.allowed) throw new Error(projectCheck.reason);
+
   const [data] = await db.insert(projects)
     .values({
       ...project,

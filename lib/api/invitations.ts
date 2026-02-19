@@ -7,6 +7,7 @@ import { requirePermission, type Role } from "@/lib/auth/permissions"
 import { randomBytes } from "crypto"
 import { createNotification } from "@/lib/api/notifications"
 import { cacheDel } from "@/lib/cache"
+import { canAddMember } from "./plan-enforcement"
 
 export async function inviteMember(
   actorId: string,
@@ -14,6 +15,9 @@ export async function inviteMember(
   data: { email: string; role: Role }
 ): Promise<{ token: string }> {
   await requirePermission(actorId, workspaceId, "members:invite")
+
+  const memberCheck = await canAddMember(workspaceId);
+  if (!memberCheck.allowed) throw new Error(memberCheck.reason);
 
   // Check if already a member
   const existingUser = await db.query.users.findFirst({

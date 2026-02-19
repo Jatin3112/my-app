@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Sidebar, MobileSidebarContent } from "./sidebar"
 import { Topbar } from "./topbar"
 import { QuickCaptureButton } from "@/components/quick-capture"
+import { TrialBanner } from "@/components/billing/trial-banner"
 import {
   Sheet,
   SheetContent,
@@ -32,6 +33,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </Sheet>
 
       <div className="flex-1 flex flex-col min-w-0">
+        <TrialBanner />
         <Topbar onMobileMenuToggle={() => setMobileOpen(true)} />
         <main className="flex-1 p-4 md:p-6 overflow-auto">
           {children}

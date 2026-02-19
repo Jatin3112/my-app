@@ -125,6 +125,54 @@ export const notificationPreferences = pgTable("notification_preferences", {
   userWorkspaceIdx: uniqueIndex("notification_preferences_user_id_workspace_id_idx").on(table.user_id, table.workspace_id),
 }));
 
+export const plans = pgTable("plans", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").unique().notNull(),
+  price_inr: integer("price_inr").notNull(),
+  price_usd: integer("price_usd").notNull(),
+  max_users: integer("max_users").notNull(),
+  max_projects: integer("max_projects").notNull(),
+  max_workspaces: integer("max_workspaces").notNull(),
+  features: json("features").$type<string[]>().default([]),
+  is_active: boolean("is_active").default(true).notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const subscriptions = pgTable("subscriptions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  workspace_id: uuid("workspace_id").references(() => workspaces.id, { onDelete: "cascade" }).notNull(),
+  plan_id: uuid("plan_id").references(() => plans.id).notNull(),
+  status: text("status").notNull().default("trialing"),
+  trial_start: timestamp("trial_start"),
+  trial_end: timestamp("trial_end"),
+  current_period_start: timestamp("current_period_start"),
+  current_period_end: timestamp("current_period_end"),
+  payment_provider: text("payment_provider"),
+  provider_subscription_id: text("provider_subscription_id"),
+  cancel_at_period_end: boolean("cancel_at_period_end").default(false).notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  workspaceIdx: index("subscriptions_workspace_id_idx").on(table.workspace_id),
+}));
+
+export const paymentHistory = pgTable("payment_history", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  workspace_id: uuid("workspace_id").references(() => workspaces.id, { onDelete: "cascade" }).notNull(),
+  subscription_id: uuid("subscription_id").references(() => subscriptions.id, { onDelete: "set null" }),
+  amount: integer("amount").notNull(),
+  currency: text("currency").notNull(),
+  provider: text("provider").notNull(),
+  provider_payment_id: text("provider_payment_id"),
+  status: text("status").notNull().default("pending"),
+  description: text("description"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  workspaceIdx: index("payment_history_workspace_id_idx").on(table.workspace_id),
+}));
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   projects: many(projects),
@@ -148,6 +196,7 @@ export const workspacesRelations = relations(workspaces, ({ one, many }) => ({
   timesheetEntries: many(timesheetEntries),
   comments: many(comments),
   notifications: many(notifications),
+  subscriptions: many(subscriptions),
 }));
 
 export const workspaceMembersRelations = relations(workspaceMembers, ({ one }) => ({
@@ -254,6 +303,32 @@ export const notificationPreferencesRelations = relations(notificationPreference
   }),
 }));
 
+export const plansRelations = relations(plans, ({ many }) => ({
+  subscriptions: many(subscriptions),
+}));
+
+export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [subscriptions.workspace_id],
+    references: [workspaces.id],
+  }),
+  plan: one(plans, {
+    fields: [subscriptions.plan_id],
+    references: [plans.id],
+  }),
+}));
+
+export const paymentHistoryRelations = relations(paymentHistory, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [paymentHistory.workspace_id],
+    references: [workspaces.id],
+  }),
+  subscription: one(subscriptions, {
+    fields: [paymentHistory.subscription_id],
+    references: [subscriptions.id],
+  }),
+}));
+
 // Types
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -284,3 +359,12 @@ export type NewNotification = typeof notifications.$inferInsert;
 
 export type NotificationPreference = typeof notificationPreferences.$inferSelect;
 export type NewNotificationPreference = typeof notificationPreferences.$inferInsert;
+
+export type Plan = typeof plans.$inferSelect;
+export type NewPlan = typeof plans.$inferInsert;
+
+export type Subscription = typeof subscriptions.$inferSelect;
+export type NewSubscription = typeof subscriptions.$inferInsert;
+
+export type PaymentRecord = typeof paymentHistory.$inferSelect;
+export type NewPaymentRecord = typeof paymentHistory.$inferInsert;

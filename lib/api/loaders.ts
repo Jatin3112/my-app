@@ -5,6 +5,7 @@ import {
   todos,
   projects,
   timesheetEntries,
+  workspaces,
   workspaceMembers,
   type Todo,
   type Project,
@@ -13,6 +14,8 @@ import {
 import { eq, and, asc, count, sum, gte, lte, desc, sql } from "drizzle-orm"
 import { getMemberRole, type Role } from "@/lib/auth/permissions"
 import { cached } from "@/lib/cache"
+import { cacheDel } from "@/lib/cache"
+import { createTrialSubscription } from "./subscriptions"
 
 // ---------------------------------------------------------------------------
 // Dashboard: stats + projects + charts + activity in a single server action
@@ -300,4 +303,80 @@ export async function loadTimesheetPageData(
   ])
 
   return { entries: entryList, projects: projectList }
+}
+
+// ---------------------------------------------------------------------------
+// Home page: workspaces + dashboard data in a single server action
+// ---------------------------------------------------------------------------
+
+export type WorkspaceWithRole = {
+  id: string
+  name: string
+  slug: string
+  owner_id: string
+  role: string
+  created_at: Date
+  updated_at: Date
+}
+
+export type HomePageData = {
+  workspaces: WorkspaceWithRole[]
+  currentWorkspace: WorkspaceWithRole
+} & DashboardData
+
+function generateSlug(name: string): string {
+  const base = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+  const suffix = Math.random().toString(36).substring(2, 8)
+  return `${base}-${suffix}`
+}
+
+export async function loadHomePageData(
+  userId: string,
+  userName: string,
+  lastWorkspaceId?: string,
+): Promise<HomePageData> {
+  // 1. Get workspace memberships
+  const memberships = await db.query.workspaceMembers.findMany({
+    where: eq(workspaceMembers.user_id, userId),
+    with: { workspace: true },
+  })
+
+  let wsData: WorkspaceWithRole[] = memberships.map((m) => ({
+    ...m.workspace,
+    role: m.role,
+  }))
+
+  // 2. Auto-create default workspace for first-time users
+  if (wsData.length === 0) {
+    const slug = generateSlug(`${userName}'s Workspace`)
+    const [newWs] = await db
+      .insert(workspaces)
+      .values({ name: `${userName}'s Workspace`, slug, owner_id: userId })
+      .returning()
+
+    await db.insert(workspaceMembers).values({
+      workspace_id: newWs.id,
+      user_id: userId,
+      role: "owner",
+    })
+
+    await createTrialSubscription(newWs.id)
+
+    await cacheDel(`workspaces:${userId}`)
+
+    wsData = [{ ...newWs, role: "owner" }]
+  }
+
+  // 3. Pick current workspace
+  const current = lastWorkspaceId
+    ? wsData.find((w) => w.id === lastWorkspaceId) || wsData[0]
+    : wsData[0]
+
+  // 4. Load dashboard data for the selected workspace
+  const dashboardData = await loadDashboardData(current.id, userId)
+
+  return { workspaces: wsData, currentWorkspace: current, ...dashboardData }
 }
