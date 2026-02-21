@@ -104,6 +104,9 @@ function createTodo(overrides: Partial<Todo> = {}): Todo {
     sort_order: 0,
     user_id: "user-1",
     workspace_id: "ws-1",
+    recurrence_rule: null,
+    recurrence_end_date: null,
+    parent_todo_id: null,
     created_at: new Date("2026-01-01"),
     updated_at: new Date("2026-01-01"),
     ...overrides,
@@ -247,5 +250,35 @@ describe("TodoList - Table Headers", () => {
     const headerTexts = headers.map(h => h.textContent);
     expect(headerTexts).toContain("Priority");
     expect(headerTexts).toContain("Due Date");
+  });
+});
+
+describe("TodoList - Recurrence", () => {
+  it("shows repeat icon on recurring todos", () => {
+    const todos = [
+      createTodo({ id: "t-rec-1", title: "Weekly standup", recurrence_rule: "weekly" }),
+    ];
+    render(<TodoList initialData={{ todos, projects: mockProjects }} />);
+
+    const repeatIcon = screen.getByTitle("Repeats weekly");
+    expect(repeatIcon).toBeInTheDocument();
+  });
+
+  it("does not show repeat icon on non-recurring todos", () => {
+    const todos = [
+      createTodo({ id: "t-rec-2", title: "One-off task", recurrence_rule: null }),
+    ];
+    render(<TodoList initialData={{ todos, projects: mockProjects }} />);
+
+    expect(screen.queryByTitle(/^Repeats /)).not.toBeInTheDocument();
+  });
+
+  it("shows recurrence selector in create dialog", async () => {
+    const user = userEvent.setup();
+    render(<TodoList initialData={{ todos: [], projects: mockProjects }} />);
+
+    await user.click(screen.getByRole("button", { name: /add todo/i }));
+
+    expect(screen.getByText("Repeat")).toBeInTheDocument();
   });
 });
