@@ -3,6 +3,11 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
 
+// Production setup (Neon):
+// 1. Create database at https://neon.tech
+// 2. Set DATABASE_URL in Vercel env vars to your Neon connection string
+// 3. The config below auto-detects remote vs localhost and adjusts SSL + pooling
+
 const connectionString = process.env.DATABASE_URL!;
 const isProduction = process.env.NODE_ENV === "production";
 
