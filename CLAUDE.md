@@ -224,19 +224,19 @@ npm run db:seed         # Seed default plans
 - US-3.3: As a user, I see the AI-parsed fields before confirming, and can edit them
 
 **Tasks:**
-- [ ] T-3.1.1: Install `openai` npm package, add OPENAI_API_KEY env var
-- [ ] T-3.1.2: Create `lib/ai/voice-parser.ts` — parseVoiceInput(text, context) using GPT-4o-mini
-- [ ] T-3.1.3: Design prompt template for timesheet parsing: extract {project, task, hours, date, notes} from natural language
-- [ ] T-3.1.4: Design prompt template for todo parsing: extract {title, description, project, priority, due_date} from natural language
-- [ ] T-3.1.5: Pass workspace's project list as context so AI matches existing project names
-- [ ] T-3.1.6: Create `app/api/ai/parse-voice/route.ts` — API endpoint for voice parsing (server-side OpenAI call)
-- [ ] T-3.1.7: Update `components/quick-capture.tsx` — after speech-to-text, send to AI parser, show parsed fields in editable form
-- [ ] T-3.1.8: Add "AI parsing..." loading state with skeleton preview of fields
-- [ ] T-3.1.9: Add confirm/edit step — user reviews parsed fields before saving
-- [ ] T-3.1.10: Handle AI parsing failures gracefully — fall back to manual entry with transcribed text pre-filled
-- [ ] T-3.1.11: Add usage tracking — count AI parses per workspace for potential future metering
-- [ ] T-3.1.12: Write unit tests for voice parser (mock OpenAI API, test timesheet parsing, todo parsing, fallback on failure)
-- [ ] T-3.1.13: Write component tests for updated QuickCapture (AI parsing states: loading, parsed preview, edit, confirm, error)
+- [x] T-3.1.1: Install `openai` npm package, add OPENAI_API_KEY env var
+- [x] T-3.1.2: Create `lib/ai/voice-parser.ts` — parseVoiceInput(text, context) using GPT-4o-mini
+- [x] T-3.1.3: Design prompt template for timesheet parsing: extract {project, task, hours, date, notes} from natural language
+- [x] T-3.1.4: Design prompt template for todo parsing: extract {title, description, project, priority, due_date} from natural language
+- [x] T-3.1.5: Pass workspace's project list as context so AI matches existing project names
+- [x] T-3.1.6: Create `app/api/ai/parse-voice/route.ts` — API endpoint for voice parsing (server-side OpenAI call)
+- [x] T-3.1.7: Update `components/quick-capture.tsx` — after speech-to-text, send to AI parser, show parsed fields in editable form
+- [x] T-3.1.8: Add "AI parsing..." loading state with skeleton preview of fields
+- [x] T-3.1.9: Add confirm/edit step — user reviews parsed fields before saving
+- [x] T-3.1.10: Handle AI parsing failures gracefully — fall back to manual entry with transcribed text pre-filled
+- [x] T-3.1.11: Add usage tracking — count AI parses per workspace for potential future metering
+- [x] T-3.1.12: Write unit tests for voice parser (mock OpenAI API, test timesheet parsing, todo parsing, fallback on failure)
+- [x] T-3.1.13: Write component tests for updated QuickCapture (AI parsing states: loading, parsed preview, edit, confirm, error)
 
 #### Sprint 3.2 — Todo Priorities + Due Dates (Week 8)
 
@@ -414,7 +414,7 @@ npm run db:seed         # Seed default plans
 | 1. Revenue | 1.2 Razorpay | DONE | 12/12 |
 | 1. Revenue | 1.3 Stripe + Email | DONE | 14/14 |
 | 2. Auth | 2.1 OAuth + Reset (NextAuth) | DONE | 29/29 |
-| 3. AI | 3.1 Voice Parsing | TODO | 0/13 |
+| 3. AI | 3.1 Voice Parsing | DONE | 13/13 |
 | 3. AI | 3.2 Priorities + Dates | TODO | 0/13 |
 | 4. Marketing | 4.1 Landing Page | TODO | 0/14 |
 | 4. Marketing | 4.2 SEO + Legal | TODO | 0/11 |
@@ -422,7 +422,7 @@ npm run db:seed         # Seed default plans
 | 5. Export | 5.2 Recurring + GDPR | TODO | 0/14 |
 | 6. Production | 6.1 Infra + Monitoring | TODO | 0/14 |
 | 6. Production | 6.2 Security + Polish | TODO | 0/13 |
-| **TOTAL** | **12 sprints** | **IN PROGRESS** | **74/180** |
+| **TOTAL** | **12 sprints** | **IN PROGRESS** | **87/180** |
 
 ---
 
