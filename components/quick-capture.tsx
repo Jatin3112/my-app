@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { getProjects } from "@/lib/api/projects";
 import { createTodo } from "@/lib/api/todos";
 import { createTimesheetEntry } from "@/lib/api/timesheet";
+import { updateOnboardingStep } from "@/lib/api/onboarding";
 import { format } from "date-fns";
 import type { Project } from "@/lib/db/schema";
 
@@ -215,6 +216,11 @@ export function QuickCaptureButton() {
     if (!text) {
       setStep("details");
       return;
+    }
+
+    // Mark onboarding step for voice usage
+    if (userId) {
+      updateOnboardingStep(userId, "tried_voice").catch(() => {});
     }
 
     // Show parsing step and call AI

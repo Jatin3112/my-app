@@ -7,6 +7,7 @@ import { requirePermission, getMemberRole } from '@/lib/auth/permissions'
 import { createNotification } from '@/lib/api/notifications'
 import { getNextDueDate, shouldGenerateNextOccurrence } from '@/lib/api/recurrence'
 import { cacheDel } from '@/lib/cache'
+import { updateOnboardingStep } from '@/lib/api/onboarding'
 
 export async function getTodos(workspaceId: string, userId: string, project_id?: string): Promise<Todo[]> {
   await requirePermission(userId, workspaceId, "todo:view_all")
@@ -45,6 +46,8 @@ export async function createTodo(workspaceId: string, userId: string, todo: Omit
   const actorName = actor?.name || actor?.email || "Someone"
   await createNotification(workspaceId, userId, "todo_created", "todo", data.id, `${actorName} created "${data.title}"`)
     .catch(() => {}) // Don't fail the action if notification fails
+
+  await updateOnboardingStep(userId, "added_todo").catch(() => {})
 
   return data
 }

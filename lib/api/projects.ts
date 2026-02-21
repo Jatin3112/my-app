@@ -7,6 +7,7 @@ import { requirePermission } from '@/lib/auth/permissions'
 import { createNotification } from '@/lib/api/notifications'
 import { cached, cacheDel } from '@/lib/cache'
 import { canAddProject } from "./plan-enforcement"
+import { updateOnboardingStep } from "@/lib/api/onboarding"
 
 export async function getProjects(workspaceId: string, userId: string): Promise<Project[]> {
   await requirePermission(userId, workspaceId, "todo:view_all")
@@ -39,6 +40,8 @@ export async function createProject(workspaceId: string, userId: string, project
   const actorName = actor?.name || actor?.email || "Someone"
   await createNotification(workspaceId, userId, "project_created", "project", data.id, `${actorName} created project "${data.name}"`)
     .catch(() => {})
+
+  await updateOnboardingStep(userId, "created_project").catch(() => {})
 
   return data
 }

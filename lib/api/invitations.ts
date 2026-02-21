@@ -9,6 +9,7 @@ import { createNotification } from "@/lib/api/notifications"
 import { cacheDel } from "@/lib/cache"
 import { canAddMember } from "./plan-enforcement"
 import { sendEmail } from "@/lib/email"
+import { updateOnboardingStep } from "@/lib/api/onboarding"
 import { inviteEmailHtml } from "@/lib/email/templates/invite"
 
 export async function inviteMember(
@@ -84,6 +85,8 @@ export async function inviteMember(
       role: data.role,
     }),
   }).catch(() => {})
+
+  await updateOnboardingStep(actorId, "invited_member").catch(() => {})
 
   return { token }
 }
