@@ -29,7 +29,12 @@ vi.mock("@/lib/api/notifications", () => ({
   createNotification: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { createTodo, updateTodo, getTodos } from "@/lib/api/todos";
+vi.mock("@/lib/api/recurrence", () => ({
+  getNextDueDate: vi.fn().mockReturnValue("2026-02-22"),
+  shouldGenerateNextOccurrence: vi.fn().mockReturnValue(true),
+}));
+
+import { createTodo, updateTodo, getTodos, toggleTodoComplete } from "@/lib/api/todos";
 import { db } from "@/lib/db";
 
 beforeEach(() => {
@@ -239,5 +244,32 @@ describe("getTodos", () => {
     expect(result[0].due_date).toBe("2026-03-01");
     expect(result[1].priority).toBe("none");
     expect(result[1].due_date).toBeNull();
+  });
+});
+
+describe("toggleTodoComplete with recurrence", () => {
+  it("creates next occurrence when completing a recurring todo", async () => {
+    const recurringTodo = {
+      id: "t1", user_id: "u1", workspace_id: "w1",
+      title: "Weekly report", completed: false,
+      recurrence_rule: "weekly", due_date: "2026-02-15",
+      recurrence_end_date: null, parent_todo_id: null,
+      description: "Send report", project_id: "p1", priority: "medium",
+      sort_order: 0, created_at: new Date(), updated_at: new Date(),
+    };
+    vi.mocked(db.query.todos.findFirst).mockResolvedValue(recurringTodo as any);
+    // Mock update chain
+    const mockReturning = vi.fn().mockResolvedValue([{ ...recurringTodo, completed: true }]);
+    const mockWhere = vi.fn().mockReturnValue({ returning: mockReturning });
+    const mockSet = vi.fn().mockReturnValue({ where: mockWhere });
+    vi.mocked(db.update).mockReturnValue({ set: mockSet } as any);
+    // Mock insert for the new occurrence
+    const mockInsertReturning = vi.fn().mockResolvedValue([{ ...recurringTodo, id: "t2" }]);
+    const mockInsertValues = vi.fn().mockReturnValue({ returning: mockInsertReturning });
+    vi.mocked(db.insert).mockReturnValue({ values: mockInsertValues } as any);
+
+    await toggleTodoComplete("w1", "u1", "t1", true);
+
+    expect(db.insert).toHaveBeenCalled();
   });
 });

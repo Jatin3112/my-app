@@ -5,6 +5,7 @@ import { todos, users, type Todo, type NewTodo } from '../db/schema'
 import { eq, and, asc, max } from 'drizzle-orm'
 import { requirePermission, getMemberRole } from '@/lib/auth/permissions'
 import { createNotification } from '@/lib/api/notifications'
+import { getNextDueDate, shouldGenerateNextOccurrence } from '@/lib/api/recurrence'
 import { cacheDel } from '@/lib/cache'
 
 export async function getTodos(workspaceId: string, userId: string, project_id?: string): Promise<Todo[]> {
@@ -82,6 +83,27 @@ export async function toggleTodoComplete(workspaceId: string, userId: string, id
     const actorName = actor?.name || actor?.email || "Someone"
     await createNotification(workspaceId, userId, "todo_completed", "todo", id, `${actorName} completed "${existing.title}"`)
       .catch(() => {})
+  }
+
+  // Generate next occurrence for recurring todos
+  if (completed && existing.recurrence_rule && existing.due_date) {
+    const nextDueDate = getNextDueDate(existing.due_date, existing.recurrence_rule)
+    if (shouldGenerateNextOccurrence(nextDueDate, existing.recurrence_end_date)) {
+      await db.insert(todos).values({
+        user_id: existing.user_id,
+        workspace_id: existing.workspace_id,
+        title: existing.title,
+        description: existing.description,
+        project_id: existing.project_id,
+        priority: existing.priority,
+        due_date: nextDueDate,
+        recurrence_rule: existing.recurrence_rule,
+        recurrence_end_date: existing.recurrence_end_date,
+        parent_todo_id: existing.parent_todo_id || existing.id,
+        completed: false,
+        sort_order: existing.sort_order,
+      } as any).returning()
+    }
   }
 
   return data
