@@ -341,20 +341,20 @@ npm run db:seed         # Seed default plans
 - US-5.6: As a user, I see onboarding hints on first login
 
 **Tasks:**
-- [ ] T-5.2.1: Add `recurrence_rule` column to todos (null, daily, weekly, monthly, custom)
-- [ ] T-5.2.2: Add `recurrence_end_date` and `parent_todo_id` columns for recurrence tracking
-- [ ] T-5.2.3: Create `lib/api/recurrence.ts` — generateNextOccurrence, processRecurringTodos
-- [ ] T-5.2.4: Create cron/scheduled function to generate next occurrence when current one is completed
-- [ ] T-5.2.5: Update todo create form — recurrence selector (None, Daily, Weekly, Monthly)
-- [ ] T-5.2.6: Show recurrence icon + label on recurring todos in list
-- [ ] T-5.2.7: Create `app/api/export/data/route.ts` — full data export endpoint (JSON/ZIP)
-- [ ] T-5.2.8: Add "Export My Data" button in workspace settings
-- [ ] T-5.2.9: Create onboarding checklist component — shown on first login (create project, add todo, try voice, invite member)
-- [ ] T-5.2.10: Track onboarding completion in user metadata
-- [ ] T-5.2.11: Write unit tests for recurrence logic (generateNextOccurrence, processRecurringTodos)
-- [ ] T-5.2.12: Write unit tests for data export (full JSON export, GDPR compliance)
-- [ ] T-5.2.13: Write component tests for onboarding checklist and recurring task UI
-- [ ] T-5.2.14: Run full test suite + coverage, verify build passes
+- [x] T-5.2.1: Add `recurrence_rule` column to todos (null, daily, weekly, monthly, custom)
+- [x] T-5.2.2: Add `recurrence_end_date` and `parent_todo_id` columns for recurrence tracking
+- [x] T-5.2.3: Create `lib/api/recurrence.ts` — generateNextOccurrence, processRecurringTodos
+- [x] T-5.2.4: Create cron/scheduled function to generate next occurrence when current one is completed
+- [x] T-5.2.5: Update todo create form — recurrence selector (None, Daily, Weekly, Monthly)
+- [x] T-5.2.6: Show recurrence icon + label on recurring todos in list
+- [x] T-5.2.7: Create `app/api/export/data/route.ts` — full data export endpoint (JSON/ZIP)
+- [x] T-5.2.8: Add "Export My Data" button in workspace settings
+- [x] T-5.2.9: Create onboarding checklist component — shown on first login (create project, add todo, try voice, invite member)
+- [x] T-5.2.10: Track onboarding completion in user metadata
+- [x] T-5.2.11: Write unit tests for recurrence logic (generateNextOccurrence, processRecurringTodos)
+- [x] T-5.2.12: Write unit tests for data export (full JSON export, GDPR compliance)
+- [x] T-5.2.13: Write component tests for onboarding checklist and recurring task UI
+- [x] T-5.2.14: Run full test suite + coverage, verify build passes
 
 ---
 
@@ -419,10 +419,10 @@ npm run db:seed         # Seed default plans
 | 4. Marketing | 4.1 Landing Page | DONE | 14/14 |
 | 4. Marketing | 4.2 SEO + Legal | DONE | 11/11 |
 | 5. Export | 5.1 Export + Files | DONE | 14/14 |
-| 5. Export | 5.2 Recurring + GDPR | TODO | 0/14 |
+| 5. Export | 5.2 Recurring + GDPR | DONE | 14/14 |
 | 6. Production | 6.1 Infra + Monitoring | TODO | 0/14 |
 | 6. Production | 6.2 Security + Polish | TODO | 0/13 |
-| **TOTAL** | **12 sprints** | **IN PROGRESS** | **139/180** |
+| **TOTAL** | **12 sprints** | **IN PROGRESS** | **153/180** |
 
 ---
 

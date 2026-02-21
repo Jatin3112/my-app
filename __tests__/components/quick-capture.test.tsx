@@ -37,6 +37,10 @@ vi.mock("@/lib/api/todos", () => ({
   createTodo: vi.fn().mockResolvedValue({}),
 }));
 
+vi.mock("@/lib/api/onboarding", () => ({
+  updateOnboardingStep: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("@/lib/api/timesheet", () => ({
   createTimesheetEntry: vi.fn().mockResolvedValue({}),
 }));

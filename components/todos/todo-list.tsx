@@ -206,7 +206,9 @@ function SortableRow({
             <span className="text-muted-foreground text-xs">—</span>
           )}
           {todo.recurrence_rule && (
-            <Repeat className="w-3.5 h-3.5 text-muted-foreground" title={`Repeats ${todo.recurrence_rule}`} />
+            <span title={`Repeats ${todo.recurrence_rule}`}>
+              <Repeat className="w-3.5 h-3.5 text-muted-foreground" />
+            </span>
           )}
         </div>
       </TableCell>
