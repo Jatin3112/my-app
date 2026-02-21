@@ -23,7 +23,7 @@ function getFileIcon(mimeType: string) {
 
 export function FileAttachment({ todoId }: { todoId: string }) {
   const { data: session } = useSession()
-  const userId = (session?.user as any)?.id
+  const userId = session?.user?.id
   const { currentWorkspace } = useWorkspace()
   const workspaceId = currentWorkspace?.id
 
@@ -70,8 +70,8 @@ export function FileAttachment({ todoId }: { todoId: string }) {
 
       toast.success("File uploaded")
       await loadAttachments()
-    } catch (error: any) {
-      toast.error(error.message || "Failed to upload file")
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to upload file")
     } finally {
       setIsUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ""

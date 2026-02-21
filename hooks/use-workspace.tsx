@@ -34,7 +34,7 @@ function persistWorkspaceId(id: string) {
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession()
-  const userId = (session?.user as any)?.id
+  const userId = session?.user?.id
   const userName = session?.user?.name || session?.user?.email?.split("@")[0] || "My"
 
   const [workspaces, setWorkspaces] = useState<WorkspaceWithRole[]>([])

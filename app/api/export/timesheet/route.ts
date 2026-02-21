@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const userId = (session.user as any).id
+  const userId = session.user.id
   const { searchParams } = new URL(request.url)
   const workspaceId = searchParams.get("workspaceId")
   const formatType = searchParams.get("format") || "csv"
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
         "Content-Disposition": `attachment; filename="timesheet-${startDate || "all"}-to-${endDate || "now"}.csv"`,
       },
     })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 })
   }
 }

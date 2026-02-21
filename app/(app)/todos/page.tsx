@@ -9,7 +9,7 @@ import { TodoList } from "@/components/todos/todo-list"
 
 export default async function TodosPage() {
   const session = await getServerSession(authOptions)
-  const userId = (session?.user as any)?.id
+  const userId = session?.user?.id
   if (!userId) redirect("/login")
 
   const workspaces = await getWorkspacesForUser(userId)

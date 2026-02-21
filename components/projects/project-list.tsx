@@ -58,7 +58,7 @@ type ProjectListProps = {
 
 export function ProjectList({ initialProjects, workspaces: initialWorkspaces, currentWorkspace: initialCurrentWorkspace }: ProjectListProps) {
   const { data: session } = useSession()
-  const userId = (session?.user as any)?.id
+  const userId = session?.user?.id
   const { currentWorkspace, seedWorkspaces } = useWorkspace()
   const workspaceId = currentWorkspace?.id
 

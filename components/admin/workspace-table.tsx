@@ -109,7 +109,7 @@ export function WorkspaceTable({
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -117,8 +117,8 @@ export function WorkspaceTable({
             <TableHead>Plan</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Members</TableHead>
-            <TableHead>Trial End</TableHead>
-            <TableHead>Created</TableHead>
+            <TableHead className="hidden md:table-cell">Trial End</TableHead>
+            <TableHead className="hidden md:table-cell">Created</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -131,15 +131,15 @@ export function WorkspaceTable({
                 <Badge variant={statusColor(ws.status)}>{ws.status}</Badge>
               </TableCell>
               <TableCell>{ws.memberCount}</TableCell>
-              <TableCell>
+              <TableCell className="hidden md:table-cell">
                 {ws.trialEnd
                   ? new Date(ws.trialEnd).toLocaleDateString()
                   : "—"}
               </TableCell>
-              <TableCell>
+              <TableCell className="hidden md:table-cell">
                 {new Date(ws.created_at).toLocaleDateString()}
               </TableCell>
-              <TableCell className="text-right space-x-2">
+              <TableCell className="text-right"><div className="flex items-center justify-end gap-2 flex-wrap">
                 <Dialog
                   open={extendingId === ws.id}
                   onOpenChange={(open) => setExtendingId(open ? ws.id : null)}
@@ -214,7 +214,7 @@ export function WorkspaceTable({
                     </div>
                   </DialogContent>
                 </Dialog>
-              </TableCell>
+              </div></TableCell>
             </TableRow>
           ))}
           {workspaces.length === 0 && (

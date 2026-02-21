@@ -33,7 +33,7 @@ interface WorkspaceSwitcherProps {
 export function WorkspaceSwitcher({ collapsed }: WorkspaceSwitcherProps) {
   const { workspaces, currentWorkspace, switchWorkspace, refreshWorkspaces } = useWorkspace()
   const { data: session } = useSession()
-  const userId = (session?.user as any)?.id
+  const userId = session?.user?.id
 
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [newName, setNewName] = useState("")
@@ -82,6 +82,7 @@ export function WorkspaceSwitcher({ collapsed }: WorkspaceSwitcherProps) {
             variant="ghost"
             className={`w-full justify-between gap-2 ${collapsed ? "px-2" : "px-3"}`}
             title={collapsed ? currentWorkspace.name : undefined}
+            aria-label={`Switch workspace, current: ${currentWorkspace.name}`}
           >
             {collapsed ? (
               <span className="text-sm font-semibold truncate">

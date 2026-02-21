@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import Stripe from "stripe";
 import { verifyStripeWebhook } from "@/lib/payments/stripe";
 import { db } from "@/lib/db";
 import { subscriptions, paymentHistory } from "@/lib/db/schema";
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
     // 5. Handle event types
     switch (event.type) {
       case "checkout.session.completed": {
-        const session = event.data.object as any;
+        const session = event.data.object as Stripe.Checkout.Session;
         const workspaceId = session.metadata?.workspace_id;
         const stripeSubscriptionId = session.subscription as string;
 
@@ -68,16 +69,17 @@ export async function POST(req: NextRequest) {
       }
 
       case "invoice.paid": {
-        const invoice = event.data.object as any;
-        const providerSubId = invoice.subscription as string;
+        const invoice = event.data.object as Stripe.Invoice;
+        const invoiceData = invoice as unknown as Record<string, unknown>;
+        const providerSubId = (typeof invoiceData.subscription === "string" ? invoiceData.subscription : null);
 
         if (providerSubId) {
           // Update period dates
           await db
             .update(subscriptions)
             .set({
-              current_period_start: new Date(invoice.period_start * 1000),
-              current_period_end: new Date(invoice.period_end * 1000),
+              current_period_start: new Date((invoiceData.period_start as number) * 1000),
+              current_period_end: new Date((invoiceData.period_end as number) * 1000),
               updated_at: new Date(),
             })
             .where(eq(subscriptions.provider_subscription_id, providerSubId));
@@ -91,8 +93,8 @@ export async function POST(req: NextRequest) {
             await db.insert(paymentHistory).values({
               workspace_id: sub.workspace_id,
               subscription_id: sub.id,
-              amount: invoice.amount_paid,
-              currency: (invoice.currency ?? "usd").toUpperCase(),
+              amount: (invoiceData.amount_paid as number) ?? 0,
+              currency: ((invoiceData.currency as string) ?? "usd").toUpperCase(),
               provider: "stripe",
               provider_payment_id: invoice.id,
               status: "captured",
@@ -104,7 +106,7 @@ export async function POST(req: NextRequest) {
       }
 
       case "customer.subscription.deleted": {
-        const subscription = event.data.object as any;
+        const subscription = event.data.object as Stripe.Subscription;
 
         await db
           .update(subscriptions)

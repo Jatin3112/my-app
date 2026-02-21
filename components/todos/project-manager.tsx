@@ -37,7 +37,7 @@ interface ProjectManagerProps {
 
 export function ProjectManager({ initialProjects }: ProjectManagerProps = {}) {
   const { data: session } = useSession()
-  const userId = (session?.user as any)?.id
+  const userId = session?.user?.id
 
   const { currentWorkspace } = useWorkspace()
   const workspaceId = currentWorkspace?.id
@@ -104,7 +104,7 @@ export function ProjectManager({ initialProjects }: ProjectManagerProps = {}) {
     if (!projectToDelete) return
 
     try {
-      await deleteProject(workspaceId!, userId, projectToDelete)
+      await deleteProject(workspaceId!, userId!, projectToDelete)
       toast.success("Project deleted successfully")
       await loadProjects()
       setIsDeleteDialogOpen(false)

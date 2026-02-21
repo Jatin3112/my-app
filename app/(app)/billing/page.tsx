@@ -15,13 +15,12 @@ import { Crown } from "lucide-react";
 
 export default function BillingPage() {
   const { data: session } = useSession();
-  const userId = (session?.user as any)?.id;
+  const userId = session?.user?.id;
   const { currentWorkspace } = useWorkspace();
 
   const [plans, setPlans] = useState<Plan[]>([]);
   const [usage, setUsage] = useState<UsageInfo | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [payments, setPayments] = useState<any[]>([]);
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [subStatus, setSubStatus] = useState<{
     isActive: boolean;
     status: string;

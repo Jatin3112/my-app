@@ -28,7 +28,7 @@ type CommentWithUser = {
 
 export function CommentList({ todoId }: CommentListProps) {
   const { data: session } = useSession()
-  const userId = (session?.user as any)?.id
+  const userId = session?.user?.id
   const { currentWorkspace } = useWorkspace()
   const workspaceId = currentWorkspace?.id
 
@@ -68,8 +68,8 @@ export function CommentList({ todoId }: CommentListProps) {
       await deleteComment(workspaceId, userId, commentId)
       await loadComments()
       toast.success("Comment deleted")
-    } catch (error: any) {
-      toast.error(error.message || "Failed to delete comment")
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete comment")
     }
   }
 

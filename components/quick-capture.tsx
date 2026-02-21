@@ -107,7 +107,7 @@ export function QuickCaptureButton() {
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const userId = (session?.user as any)?.id as string | undefined;
+  const userId = session?.user?.id;
   const workspaceId = currentWorkspace?.id;
 
   // Fetch projects when dialog opens
@@ -402,6 +402,7 @@ export function QuickCaptureButton() {
               <div className="flex flex-col items-center gap-4 py-6">
                 <button
                   onClick={isRecording ? stopRecording : startRecording}
+                  aria-label={isRecording ? "Stop recording" : "Start recording"}
                   className={`size-16 rounded-full flex items-center justify-center transition ${
                     isRecording ? "bg-red-500 animate-pulse" : "bg-primary"
                   } text-primary-foreground`}
@@ -413,11 +414,12 @@ export function QuickCaptureButton() {
                   )}
                 </button>
 
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground" aria-live="polite">
                   {isRecording && (
-                    <span className="size-2 rounded-full bg-red-500 animate-pulse" />
+                    <span className="size-2 rounded-full bg-red-500 animate-pulse" aria-hidden="true" />
                   )}
                   <span className="font-mono">{formatTime(recordingTime)}</span>
+                  {isRecording && <span className="sr-only">Recording in progress</span>}
                 </div>
 
                 {transcribedText && (

@@ -18,7 +18,7 @@ import { Download } from "lucide-react"
 
 export default function WorkspaceSettingsPage() {
   const { data: session } = useSession()
-  const userId = (session?.user as any)?.id
+  const userId = session?.user?.id
   const { currentWorkspace, refreshWorkspaces } = useWorkspace()
   const router = useRouter()
   const workspaceId = currentWorkspace?.id
@@ -42,8 +42,8 @@ export default function WorkspaceSettingsPage() {
       await updateWorkspace(userId, workspaceId, { name: workspaceName.trim() })
       await refreshWorkspaces()
       toast.success("Workspace name updated")
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update workspace")
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to update workspace")
     } finally {
       setIsSaving(false)
     }
@@ -56,8 +56,8 @@ export default function WorkspaceSettingsPage() {
       await refreshWorkspaces()
       toast.success("Workspace deleted")
       router.push("/dashboard")
-    } catch (error: any) {
-      toast.error(error.message || "Failed to delete workspace")
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete workspace")
     }
     setIsDeleteOpen(false)
   }
@@ -69,8 +69,8 @@ export default function WorkspaceSettingsPage() {
       await refreshWorkspaces()
       toast.success("Left workspace")
       router.push("/dashboard")
-    } catch (error: any) {
-      toast.error(error.message || "Failed to leave workspace")
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to leave workspace")
     }
     setIsLeaveOpen(false)
   }

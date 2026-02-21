@@ -36,7 +36,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {!collapsed && (
           <span className="font-semibold text-sm tracking-tight">Task Manager</span>
         )}
-        <Button variant="ghost" size="icon-sm" onClick={onToggle}>
+        <Button variant="ghost" size="icon-sm" onClick={onToggle} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
           {collapsed ? <PanelLeft className="size-4" /> : <PanelLeftClose className="size-4" />}
         </Button>
       </div>
@@ -47,11 +47,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
       {!collapsed && <PlanBadge />}
 
-      <nav className="flex-1 p-2 space-y-1">
+      <nav className="flex-1 p-2 space-y-1" aria-label="Main navigation">
         {navItems.map((item) => {
           const isActive = pathname === item.href
           return (
-            <Link key={item.href} href={item.href}>
+            <Link key={item.href} href={item.href} aria-current={isActive ? "page" : undefined}>
               <div
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
@@ -82,11 +82,11 @@ export function MobileSidebarContent({ onNavigate }: { onNavigate: () => void })
         <WorkspaceSwitcher />
       </div>
       <PlanBadge />
-      <nav className="flex flex-col gap-1 p-2">
+      <nav className="flex flex-col gap-1 p-2" aria-label="Main navigation">
         {navItems.map((item) => {
           const isActive = pathname === item.href
           return (
-            <Link key={item.href} href={item.href} onClick={onNavigate}>
+            <Link key={item.href} href={item.href} onClick={onNavigate} aria-current={isActive ? "page" : undefined}>
               <div
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",

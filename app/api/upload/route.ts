@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const userId = (session.user as any).id
+  const userId = session.user.id
 
   try {
     const formData = await request.formData()
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     const attachment = await createAttachment(workspaceId, userId, todoId, file.name, file.type, buffer)
 
     return NextResponse.json(attachment, { status: 201 })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 })
   }
 }

@@ -31,6 +31,12 @@ export function Navbar() {
           >
             Pricing
           </Link>
+          <Link
+            href="/help"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Help
+          </Link>
         </nav>
 
         {/* Right side — auth-dependent */}

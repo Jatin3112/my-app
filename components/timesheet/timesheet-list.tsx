@@ -65,7 +65,7 @@ import { useWorkspace } from "@/hooks/use-workspace"
 
 export function TimesheetList() {
   const { data: session } = useSession()
-  const userId = (session?.user as any)?.id
+  const userId = session?.user?.id
 
   const { currentWorkspace } = useWorkspace()
   const workspaceId = currentWorkspace?.id
@@ -224,7 +224,7 @@ export function TimesheetList() {
 
     undoTimerRef.current = setTimeout(async () => {
       try {
-        await deleteTimesheetEntry(workspaceId!, userId, id)
+        await deleteTimesheetEntry(workspaceId!, userId!, id)
       } catch (error) {
         setEntries((prev) => [...prev, entry])
         toast.error("Failed to delete entry")
@@ -346,7 +346,7 @@ export function TimesheetList() {
           <div className="h-8 w-48 bg-muted animate-pulse rounded" />
           <div className="h-9 w-28 bg-muted animate-pulse rounded" />
         </div>
-        <div className="border rounded-lg overflow-hidden">
+        <div className="border rounded-lg overflow-x-auto">
           <div className="bg-muted px-4 py-3">
             <div className="h-5 w-48 bg-muted-foreground/20 animate-pulse rounded" />
           </div>
@@ -382,7 +382,7 @@ export function TimesheetList() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-2xl font-bold">Timesheet Entries</h2>
           <div className="flex items-center gap-2">
             <DropdownMenu>
@@ -572,15 +572,15 @@ export function TimesheetList() {
             const totalHours = dateEntries.reduce((sum, entry) => sum + entry.hours, 0)
 
             return (
-              <div key={date} className="border rounded-lg overflow-hidden">
-                <div className="bg-muted px-4 py-3 flex items-center justify-between">
+              <div key={date} className="border rounded-lg overflow-x-auto">
+                <div className="bg-muted px-4 py-3 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                    <h3 className="font-semibold">
+                    <CalendarIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <h3 className="font-semibold text-sm sm:text-base">
                       {format(new Date(date + "T00:00:00"), "EEEE, MMMM d, yyyy")}
                     </h3>
                   </div>
-                  <span className="text-sm font-medium">
+                  <span className="text-sm font-medium whitespace-nowrap">
                     Total: {totalHours.toFixed(2)} hours
                   </span>
                 </div>

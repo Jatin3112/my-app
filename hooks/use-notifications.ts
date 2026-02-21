@@ -22,7 +22,7 @@ const POLL_INTERVAL = 30000 // 30 seconds
 
 export function useNotifications() {
   const { data: session } = useSession()
-  const userId = (session?.user as any)?.id
+  const userId = session?.user?.id
   const { currentWorkspace } = useWorkspace()
   const workspaceId = currentWorkspace?.id
 

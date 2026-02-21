@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useSession } from "next-auth/react"
 import { useWorkspace } from "@/hooks/use-workspace"
 import { inviteMember } from "@/lib/api/invitations"
+import type { Role } from "@/lib/auth/permissions"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -14,7 +15,7 @@ import { toast } from "sonner"
 
 export function InviteDialog() {
   const { data: session } = useSession()
-  const userId = (session?.user as any)?.id
+  const userId = session?.user?.id
   const { currentWorkspace } = useWorkspace()
   const workspaceId = currentWorkspace?.id
 
@@ -31,12 +32,12 @@ export function InviteDialog() {
 
     setIsLoading(true)
     try {
-      const { token } = await inviteMember(userId, workspaceId, { email: email.trim(), role: role as any })
+      const { token } = await inviteMember(userId, workspaceId, { email: email.trim(), role: role as Role })
       const link = `${window.location.origin}/invite/${token}`
       setInviteLink(link)
       toast.success("Invitation created")
-    } catch (error: any) {
-      toast.error(error.message || "Failed to send invitation")
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to send invitation")
     } finally {
       setIsLoading(false)
     }

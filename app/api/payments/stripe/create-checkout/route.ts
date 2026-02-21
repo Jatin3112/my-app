@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = session.user!.id;
     const userEmail: string = session.user?.email ?? "";
 
     // 2. Parse and validate body

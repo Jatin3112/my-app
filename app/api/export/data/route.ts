@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const userId = (session.user as any).id
+  const userId = session.user.id
 
   try {
     const [user, userTodos, userTimesheet, userComments, memberships, userAttachments, notifPrefs] =
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
         "Content-Disposition": `attachment; filename="voicetask-data-export-${new Date().toISOString().split("T")[0]}.json"`,
       },
     })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 })
   }
 }

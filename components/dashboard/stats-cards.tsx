@@ -15,7 +15,7 @@ interface StatsCardsProps {
 
 export function StatsCards({ stats: propStats }: StatsCardsProps = {}) {
   const { data: session } = useSession()
-  const userId = (session?.user as any)?.id
+  const userId = session?.user?.id
 
   const { currentWorkspace } = useWorkspace()
   const workspaceId = currentWorkspace?.id
@@ -111,14 +111,14 @@ export function StatsCards({ stats: propStats }: StatsCardsProps = {}) {
   ]
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4" role="region" aria-label="Dashboard statistics">
       {statItems.map((item) => (
         <Card key={item.title}>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               {item.title}
             </CardTitle>
-            <item.icon className={`size-4 ${item.color}`} />
+            <item.icon className={`size-4 ${item.color}`} aria-hidden="true" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">

@@ -395,11 +395,11 @@ npm run db:seed         # Seed default plans
 - [x] T-6.2.3: Add rate limiting to login/register endpoints (brute force protection)
 - [x] T-6.2.4: Sanitize all user inputs — prevent XSS in comments, todo titles, project names
 - [x] T-6.2.5: Add request logging for audit trail (`lib/api/audit.ts`)
-- [ ] T-6.2.6: Review and fix all TypeScript `any` casts — add proper types
+- [x] T-6.2.6: Review and fix all TypeScript `any` casts — add proper types
 - [ ] T-6.2.7: Performance audit — Lighthouse score > 90 on all pages
-- [ ] T-6.2.8: Accessibility audit — keyboard navigation, screen reader support, ARIA labels
-- [ ] T-6.2.9: Mobile responsiveness pass — test all pages on mobile viewport
-- [ ] T-6.2.10: Write user-facing docs/help — getting started guide, FAQ
+- [x] T-6.2.8: Accessibility audit — keyboard navigation, screen reader support, ARIA labels
+- [x] T-6.2.9: Mobile responsiveness pass — test all pages on mobile viewport
+- [x] T-6.2.10: Write user-facing docs/help — getting started guide, FAQ
 - [x] T-6.2.11: Write integration tests for critical user flows (signup → trial → payment → daily use → export → cancel)
 - [x] T-6.2.12: Run full test suite + coverage report (target: 80%+ on server actions, 70%+ overall)
 - [ ] T-6.2.13: Final QA — manual testing of all user flows end-to-end
@@ -421,8 +421,8 @@ npm run db:seed         # Seed default plans
 | 5. Export | 5.1 Export + Files | DONE | 14/14 |
 | 5. Export | 5.2 Recurring + GDPR | DONE | 14/14 |
 | 6. Production | 6.1 Infra + Monitoring | IN PROGRESS | 11/14 |
-| 6. Production | 6.2 Security + Polish | IN PROGRESS | 7/13 |
-| **TOTAL** | **12 sprints** | **IN PROGRESS** | **160/180** |
+| 6. Production | 6.2 Security + Polish | IN PROGRESS | 11/13 |
+| **TOTAL** | **12 sprints** | **IN PROGRESS** | **164/180** |
 
 ---
 
@@ -461,7 +461,7 @@ When resuming development in a new session:
 - DB columns: snake_case (`created_at`, `user_id`)
 
 ### TypeScript
-- NextAuth `useSession()` doesn't include `id` — cast: `(session?.user as any)?.id`
+- NextAuth `useSession()` includes `id` via `types/next-auth.d.ts` — use `session?.user?.id` directly
 - Web Speech API needs custom TypeScript interfaces (no built-in types)
 - Zod 4 for runtime validation in forms
 
@@ -602,4 +602,4 @@ Every sprint MUST end with a testing task that:
 - Always check ALL remote services in the request chain when debugging latency
 - `lib/db/index.ts` uses globalThis pattern — required to prevent connection pool leak in dev
 - Redis cache is currently inactive (no env vars set) — `lib/cache.ts` gracefully skips
-- NextAuth session type quirk: user.id not in type, cast with `(session?.user as any)?.id`
+- NextAuth session type extended in `types/next-auth.d.ts` — use `session?.user?.id` (no cast needed)

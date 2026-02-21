@@ -138,6 +138,7 @@ function SortableRow({
       <TableCell>
         <button
           className="cursor-grab active:cursor-grabbing touch-none text-muted-foreground hover:text-foreground"
+          aria-label={`Reorder ${todo.title}`}
           {...attributes}
           {...listeners}
         >
@@ -148,6 +149,7 @@ function SortableRow({
         <Checkbox
           checked={isSelected}
           onCheckedChange={onToggleSelect}
+          aria-label={`Select ${todo.title}`}
         />
       </TableCell>
       <TableCell>
@@ -156,6 +158,7 @@ function SortableRow({
           variant="ghost"
           onClick={onToggleComplete}
           className="h-8 w-8 p-0"
+          aria-label={todo.completed ? `Mark ${todo.title} as incomplete` : `Mark ${todo.title} as complete`}
         >
           {todo.completed ? (
             <Check className="w-5 h-5 text-green-600" />
@@ -214,10 +217,10 @@ function SortableRow({
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-1">
-          <Button size="sm" variant="ghost" onClick={onEdit}>
+          <Button size="sm" variant="ghost" onClick={onEdit} aria-label={`Edit ${todo.title}`}>
             <Pencil className="w-4 h-4" />
           </Button>
-          <Button size="sm" variant="ghost" onClick={onDelete}>
+          <Button size="sm" variant="ghost" onClick={onDelete} aria-label={`Delete ${todo.title}`}>
             <Trash2 className="w-4 h-4 text-destructive" />
           </Button>
         </div>
@@ -228,7 +231,7 @@ function SortableRow({
 
 export function TodoList({ initialData, workspaces: initialWorkspaces, currentWorkspace: initialCurrentWorkspace }: TodoListProps) {
   const { data: session } = useSession()
-  const userId = (session?.user as any)?.id
+  const userId = session?.user?.id
 
   const { currentWorkspace, seedWorkspaces } = useWorkspace()
   const workspaceId = currentWorkspace?.id
@@ -398,7 +401,7 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
       prev.map((t) => (t.id === todo.id ? { ...t, completed: !t.completed } : t))
     )
     try {
-      await toggleTodoComplete(workspaceId!, userId, todo.id, !todo.completed)
+      await toggleTodoComplete(workspaceId!, userId!, todo.id, !todo.completed)
       // If completing a recurring todo, reload to pick up the newly generated occurrence
       if (todo.recurrence_rule && !todo.completed) {
         await loadTodos()
@@ -440,7 +443,7 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
 
     undoTimerRef.current = setTimeout(async () => {
       try {
-        await deleteTodo(workspaceId!, userId, id)
+        await deleteTodo(workspaceId!, userId!, id)
       } catch (error) {
         setTodos((prev) => [...prev, todo])
         toast.error("Failed to delete todo")
@@ -577,7 +580,7 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
           <div className="h-8 w-32 bg-muted animate-pulse rounded" />
           <div className="h-9 w-28 bg-muted animate-pulse rounded" />
         </div>
-        <div className="border rounded-lg">
+        <div className="border rounded-lg overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -769,10 +772,11 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-8"
+              aria-label="Search todos"
             />
           </div>
           <Select value={filterProjectId} onValueChange={setFilterProjectId}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px]" aria-label="Filter by project">
               <SelectValue placeholder="Filter by project" />
             </SelectTrigger>
             <SelectContent>
@@ -785,11 +789,12 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
               ))}
             </SelectContent>
           </Select>
-          <div className="flex rounded-md border">
+          <div className="flex rounded-md border" role="group" aria-label="Filter by status">
             {(["all", "pending", "completed"] as StatusFilter[]).map((status) => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
+                aria-pressed={statusFilter === status}
                 className={`px-3 py-1.5 text-sm font-medium capitalize transition-colors ${
                   statusFilter === status
                     ? "bg-primary text-primary-foreground"
@@ -801,7 +806,7 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
             ))}
           </div>
           <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger className="w-[150px]" aria-label="Filter by priority">
               <SelectValue placeholder="Priority" />
             </SelectTrigger>
             <SelectContent>
@@ -813,7 +818,7 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
             </SelectContent>
           </Select>
           <Select value={dueDateFilter} onValueChange={setDueDateFilter}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-[140px]" aria-label="Filter by due date">
               <SelectValue placeholder="Due date" />
             </SelectTrigger>
             <SelectContent>
@@ -825,7 +830,7 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
             </SelectContent>
           </Select>
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-[160px]" aria-label="Sort todos by">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -840,7 +845,7 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
 
       {/* Table */}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <div className="border rounded-lg">
+        <div className="border rounded-lg overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -849,6 +854,7 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
                   <Checkbox
                     checked={allVisibleSelected && filteredTodos.length > 0}
                     onCheckedChange={toggleSelectAll}
+                    aria-label="Select all todos"
                   />
                 </TableHead>
                 <TableHead className="w-[50px]">Status</TableHead>

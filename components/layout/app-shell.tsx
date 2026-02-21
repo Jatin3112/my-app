@@ -33,9 +33,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </Sheet>
 
       <div className="flex-1 flex flex-col min-w-0">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md"
+        >
+          Skip to main content
+        </a>
         <TrialBanner />
         <Topbar onMobileMenuToggle={() => setMobileOpen(true)} />
-        <main className="flex-1 p-4 md:p-6 overflow-auto">
+        <main id="main-content" role="main" className="flex-1 p-4 md:p-6 overflow-auto">
           {children}
         </main>
       </div>

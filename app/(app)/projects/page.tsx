@@ -9,7 +9,7 @@ import { ProjectList } from "@/components/projects/project-list"
 
 export default async function ProjectsPage() {
   const session = await getServerSession(authOptions)
-  const userId = (session?.user as any)?.id
+  const userId = session?.user?.id
   if (!userId) redirect("/login")
 
   const workspaces = await getWorkspacesForUser(userId)

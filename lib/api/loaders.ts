@@ -221,7 +221,7 @@ export async function loadDashboardData(
     ...recentTodos.map((t) => ({
       type: "todo" as const,
       title: t.title,
-      detail: (t as any).project?.name || "No project",
+      detail: (t as unknown as { project?: { name: string } }).project?.name || "No project",
       timestamp: t.created_at,
     })),
     ...recentTimesheet.map((e) => ({

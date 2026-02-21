@@ -34,6 +34,7 @@ export function Topbar({ onMobileMenuToggle }: TopbarProps) {
           size="icon-sm"
           className="md:hidden"
           onClick={onMobileMenuToggle}
+          aria-label="Open navigation menu"
         >
           <Menu className="size-4" />
         </Button>
@@ -43,7 +44,7 @@ export function Topbar({ onMobileMenuToggle }: TopbarProps) {
       <div className="flex items-center gap-2">
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon-sm" title="Keyboard shortcuts">
+            <Button variant="ghost" size="icon-sm" aria-label="Keyboard shortcuts">
               <Keyboard className="size-4" />
             </Button>
           </PopoverTrigger>
@@ -74,7 +75,7 @@ export function Topbar({ onMobileMenuToggle }: TopbarProps) {
               <User className="size-3.5" />
               <span className="max-w-[120px] truncate">{session.user?.name || session.user?.email}</span>
             </div>
-            <Button variant="ghost" size="icon-sm" onClick={() => signOut()} title="Logout">
+            <Button variant="ghost" size="icon-sm" onClick={() => signOut()} aria-label="Log out">
               <LogOut className="size-4" />
             </Button>
           </>

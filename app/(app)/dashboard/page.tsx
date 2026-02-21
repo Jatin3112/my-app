@@ -18,7 +18,7 @@ const STORAGE_KEY = "last-workspace-id"
 
 export default function Home() {
   const { data: session } = useSession()
-  const userId = (session?.user as any)?.id
+  const userId = session?.user?.id
   const userName = session?.user?.name || "there"
   const { seedWorkspaces, currentWorkspace } = useWorkspace()
   const workspaceName = currentWorkspace?.name || "your workspace"
@@ -57,7 +57,7 @@ export default function Home() {
         </div>
 
         {/* Onboarding Checklist */}
-        {data?.onboarding && (
+        {data?.onboarding && userId && (
           <OnboardingChecklist status={data.onboarding} userId={userId} />
         )}
 

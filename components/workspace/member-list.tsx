@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { useWorkspace } from "@/hooks/use-workspace"
 import { getWorkspaceMembers, removeMember, updateMemberRole, transferOwnership } from "@/lib/api/members"
+import type { Role } from "@/lib/auth/permissions"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
@@ -22,7 +23,7 @@ type Member = {
 
 export function MemberList() {
   const { data: session } = useSession()
-  const userId = (session?.user as any)?.id
+  const userId = session?.user?.id
   const { currentWorkspace } = useWorkspace()
   const workspaceId = currentWorkspace?.id
   const myRole = currentWorkspace?.role
@@ -52,19 +53,19 @@ export function MemberList() {
       toast.success("Member removed")
       setRemoveTarget(null)
       await loadMembers()
-    } catch (error: any) {
-      toast.error(error.message || "Failed to remove member")
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to remove member")
     }
   }
 
   async function handleRoleChange(targetUserId: string, newRole: string) {
     if (!userId || !workspaceId) return
     try {
-      await updateMemberRole(userId, workspaceId, targetUserId, newRole as any)
+      await updateMemberRole(userId, workspaceId, targetUserId, newRole as Role)
       toast.success("Role updated")
       await loadMembers()
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update role")
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to update role")
     }
   }
 
@@ -75,8 +76,8 @@ export function MemberList() {
       toast.success("Ownership transferred")
       setTransferTarget(null)
       await loadMembers()
-    } catch (error: any) {
-      toast.error(error.message || "Failed to transfer ownership")
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to transfer ownership")
     }
   }
 

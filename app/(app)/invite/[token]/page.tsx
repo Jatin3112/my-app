@@ -12,7 +12,7 @@ import Link from "next/link"
 export default function InvitePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params)
   const { data: session, status } = useSession()
-  const userId = (session?.user as any)?.id
+  const userId = session?.user?.id
   const router = useRouter()
 
   const [state, setState] = useState<"loading" | "success" | "error">("loading")
