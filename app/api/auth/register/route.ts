@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm"
 import bcrypt from "bcrypt"
 import { createWorkspace } from "@/lib/api/workspaces"
 import { acceptInvitation } from "@/lib/api/invitations"
+import { sendVerificationEmail } from "@/lib/api/email-verification"
 
 export async function POST(req: Request) {
   try {
@@ -57,8 +58,11 @@ export async function POST(req: Request) {
       await createWorkspace(newUser.id, { name: `${displayName}'s Workspace` })
     }
 
+    // Send verification email
+    await sendVerificationEmail(newUser.id)
+
     return NextResponse.json(
-      { message: "User created successfully", user: { id: newUser.id, email: newUser.email, name: newUser.name } },
+      { message: "Account created! Please check your email to verify your account.", user: { id: newUser.id, email: newUser.email, name: newUser.name }, requiresVerification: true },
       { status: 201 }
     )
   } catch (error) {
