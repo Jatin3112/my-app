@@ -41,7 +41,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Plus, Pencil, Trash2, Check, X, Search, GripVertical, MessageSquare, AlertCircle } from "lucide-react"
+import { Plus, Pencil, Trash2, Check, X, Search, GripVertical, MessageSquare, AlertCircle, Repeat } from "lucide-react"
 import { VoiceInput } from "@/components/ui/voice-input"
 import { toast } from "sonner"
 import {
@@ -187,23 +187,28 @@ function SortableRow({
         )}
       </TableCell>
       <TableCell>
-        {todo.due_date ? (() => {
-          const today = new Date().toISOString().split("T")[0]
-          const isOverdue = todo.due_date < today && !todo.completed
-          const isDueToday = todo.due_date === today
-          return (
-            <span className={`inline-flex items-center gap-1 text-xs ${
-              isOverdue ? "text-red-600 dark:text-red-400 font-medium" :
-              isDueToday && !todo.completed ? "text-amber-600 dark:text-amber-400 font-medium" :
-              "text-muted-foreground"
-            }`}>
-              {isOverdue && <AlertCircle className="size-3" />}
-              {isDueToday ? "Today" : todo.due_date}
-            </span>
-          )
-        })() : (
-          <span className="text-muted-foreground text-xs">—</span>
-        )}
+        <div className="flex items-center gap-1.5">
+          {todo.due_date ? (() => {
+            const today = new Date().toISOString().split("T")[0]
+            const isOverdue = todo.due_date < today && !todo.completed
+            const isDueToday = todo.due_date === today
+            return (
+              <span className={`inline-flex items-center gap-1 text-xs ${
+                isOverdue ? "text-red-600 dark:text-red-400 font-medium" :
+                isDueToday && !todo.completed ? "text-amber-600 dark:text-amber-400 font-medium" :
+                "text-muted-foreground"
+              }`}>
+                {isOverdue && <AlertCircle className="size-3" />}
+                {isDueToday ? "Today" : todo.due_date}
+              </span>
+            )
+          })() : (
+            <span className="text-muted-foreground text-xs">—</span>
+          )}
+          {todo.recurrence_rule && (
+            <Repeat className="w-3.5 h-3.5 text-muted-foreground" title={`Repeats ${todo.recurrence_rule}`} />
+          )}
+        </div>
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-1">
@@ -254,6 +259,8 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
     project_id: "none",
     priority: "none",
     due_date: "",
+    recurrence_rule: "none",
+    recurrence_end_date: "",
   })
   const [isLoading, setIsLoading] = useState(false)
   const [detailTodo, setDetailTodo] = useState<Todo | null>(null)
@@ -263,7 +270,7 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
   useKeyboardShortcuts({
     onNew: () => {
       setEditingTodo(null)
-      setFormData({ title: "", description: "", project_id: "none", priority: "none", due_date: "" })
+      setFormData({ title: "", description: "", project_id: "none", priority: "none", due_date: "", recurrence_rule: "none", recurrence_end_date: "" })
       setIsOpen(true)
     },
     onSearch: () => searchInputRef.current?.focus(),
@@ -362,6 +369,8 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
         ...formData,
         project_id: formData.project_id === "none" ? null : formData.project_id,
         due_date: formData.due_date || null,
+        recurrence_rule: formData.recurrence_rule === "none" ? null : formData.recurrence_rule,
+        recurrence_end_date: formData.recurrence_end_date || null,
       }
 
       if (editingTodo) {
@@ -388,6 +397,10 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
     )
     try {
       await toggleTodoComplete(workspaceId!, userId, todo.id, !todo.completed)
+      // If completing a recurring todo, reload to pick up the newly generated occurrence
+      if (todo.recurrence_rule && !todo.completed) {
+        await loadTodos()
+      }
     } catch (error) {
       // Revert on failure
       setTodos((prev) =>
@@ -396,7 +409,7 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
       toast.error("Failed to update todo")
       console.error(error)
     }
-  }, [])
+  }, [workspaceId, userId])
 
   function handleSingleDelete(id: string) {
     const todo = todos.find((t) => t.id === id)
@@ -472,6 +485,8 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
       project_id: todo.project_id || "none",
       priority: todo.priority || "none",
       due_date: todo.due_date || "",
+      recurrence_rule: todo.recurrence_rule || "none",
+      recurrence_end_date: todo.recurrence_end_date || "",
     })
     setIsOpen(true)
   }
@@ -479,7 +494,7 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
   function handleClose() {
     setIsOpen(false)
     setEditingTodo(null)
-    setFormData({ title: "", description: "", project_id: "none", priority: "none", due_date: "" })
+    setFormData({ title: "", description: "", project_id: "none", priority: "none", due_date: "", recurrence_rule: "none", recurrence_end_date: "" })
   }
 
   function getProjectName(projectId: string | null) {
@@ -604,7 +619,7 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
           <h2 className="text-2xl font-bold">Todos</h2>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => { setEditingTodo(null); setFormData({ title: "", description: "", project_id: "none", priority: "none", due_date: "" }); }}>
+              <Button onClick={() => { setEditingTodo(null); setFormData({ title: "", description: "", project_id: "none", priority: "none", due_date: "", recurrence_rule: "none", recurrence_end_date: "" }); }}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Todo
               </Button>
@@ -701,6 +716,33 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
                       </div>
                     </div>
                   </div>
+                  <div className="grid gap-2">
+                    <Label>Repeat</Label>
+                    <Select
+                      value={formData.recurrence_rule}
+                      onValueChange={(value) => setFormData({ ...formData, recurrence_rule: value })}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="No repeat" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {formData.recurrence_rule !== "none" && (
+                    <div className="grid gap-2">
+                      <Label>Repeat until (optional)</Label>
+                      <DatePicker
+                        value={formData.recurrence_end_date}
+                        onChange={(date) => setFormData({ ...formData, recurrence_end_date: date })}
+                        placeholder="No end date"
+                      />
+                    </div>
+                  )}
                 </div>
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={handleClose}>
@@ -918,6 +960,12 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
               {detailTodo?.due_date && (
                 <span className="text-muted-foreground">
                   Due: {detailTodo.due_date}
+                </span>
+              )}
+              {detailTodo?.recurrence_rule && (
+                <span className="inline-flex items-center gap-1 text-muted-foreground">
+                  <Repeat className="w-3.5 h-3.5" />
+                  Repeats {detailTodo.recurrence_rule}
                 </span>
               )}
             </div>
