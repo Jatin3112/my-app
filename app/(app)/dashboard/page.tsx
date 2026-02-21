@@ -1,18 +1,29 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import dynamic from "next/dynamic"
 import { useSession } from "next-auth/react"
 import { AppShell } from "@/components/layout/app-shell"
 import { KeyMetrics } from "@/components/dashboard/key-metrics"
-import { TodoCompletionChart } from "@/components/dashboard/charts/todo-completion-chart"
-import { HoursByProjectChart } from "@/components/dashboard/charts/hours-by-project-chart"
-import { WeeklyActivityChart } from "@/components/dashboard/charts/weekly-activity-chart"
 import { RecentActivity } from "@/components/dashboard/recent-activity"
 import { ProjectProgress } from "@/components/dashboard/project-progress"
 import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist"
 import { useWorkspace } from "@/hooks/use-workspace"
 import { loadHomePageData, type DashboardData } from "@/lib/api/loaders"
 import { LayoutDashboard } from "lucide-react"
+
+const TodoCompletionChart = dynamic(
+  () => import("@/components/dashboard/charts/todo-completion-chart").then(m => m.TodoCompletionChart),
+  { ssr: false, loading: () => <div className="h-[300px] rounded-xl bg-muted animate-pulse" /> }
+)
+const HoursByProjectChart = dynamic(
+  () => import("@/components/dashboard/charts/hours-by-project-chart").then(m => m.HoursByProjectChart),
+  { ssr: false, loading: () => <div className="h-[300px] rounded-xl bg-muted animate-pulse" /> }
+)
+const WeeklyActivityChart = dynamic(
+  () => import("@/components/dashboard/charts/weekly-activity-chart").then(m => m.WeeklyActivityChart),
+  { ssr: false, loading: () => <div className="h-[300px] rounded-xl bg-muted animate-pulse" /> }
+)
 
 const STORAGE_KEY = "last-workspace-id"
 

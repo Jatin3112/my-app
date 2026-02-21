@@ -368,7 +368,7 @@ npm run db:seed         # Seed default plans
 - US-6.3: As an admin, I have an internal dashboard to manage tenants
 
 **Tasks:**
-- [~] T-6.1.1: Migrate to managed PostgreSQL (Neon free tier) — update DATABASE_URL, test all queries
+- [x] T-6.1.1: Migrate to managed PostgreSQL (Neon free tier) — update DATABASE_URL, test all queries
 - [x] T-6.1.2: Install and configure Sentry (`@sentry/nextjs`) — error tracking, performance monitoring
 - [x] T-6.1.3: Install PostHog or Plausible — page views, feature usage, funnel tracking
 - [x] T-6.1.4: Add rate limiting to API routes (`lib/api/rate-limit.ts`) — per-IP and per-user
@@ -378,8 +378,8 @@ npm run db:seed         # Seed default plans
 - [x] T-6.1.8: Admin: view subscription status, manually extend trials, change plans
 - [x] T-6.1.9: Admin: global stats — total users, workspaces, MRR, churn rate
 - [x] T-6.1.10: Set up Vercel deployment — connect repo, env vars, preview deployments
-- [ ] T-6.1.11: Configure custom domain + SSL
-- [ ] T-6.1.12: Set up uptime monitoring (BetterStack or UptimeRobot)
+- [ ] T-6.1.11: Configure custom domain + SSL (Vercel dashboard + DNS — manual)
+- [x] T-6.1.12: Set up uptime monitoring (BetterStack or UptimeRobot)
 - [x] T-6.1.13: Write unit tests for rate limiting middleware
 - [x] T-6.1.14: Write tests for admin dashboard data queries (workspace list, subscription stats, MRR calculation)
 
@@ -396,7 +396,7 @@ npm run db:seed         # Seed default plans
 - [x] T-6.2.4: Sanitize all user inputs — prevent XSS in comments, todo titles, project names
 - [x] T-6.2.5: Add request logging for audit trail (`lib/api/audit.ts`)
 - [x] T-6.2.6: Review and fix all TypeScript `any` casts — add proper types
-- [ ] T-6.2.7: Performance audit — Lighthouse score > 90 on all pages
+- [x] T-6.2.7: Performance audit — Lighthouse score > 90 on all pages
 - [x] T-6.2.8: Accessibility audit — keyboard navigation, screen reader support, ARIA labels
 - [x] T-6.2.9: Mobile responsiveness pass — test all pages on mobile viewport
 - [x] T-6.2.10: Write user-facing docs/help — getting started guide, FAQ
@@ -420,9 +420,9 @@ npm run db:seed         # Seed default plans
 | 4. Marketing | 4.2 SEO + Legal | DONE | 11/11 |
 | 5. Export | 5.1 Export + Files | DONE | 14/14 |
 | 5. Export | 5.2 Recurring + GDPR | DONE | 14/14 |
-| 6. Production | 6.1 Infra + Monitoring | IN PROGRESS | 11/14 |
-| 6. Production | 6.2 Security + Polish | IN PROGRESS | 11/13 |
-| **TOTAL** | **12 sprints** | **IN PROGRESS** | **164/180** |
+| 6. Production | 6.1 Infra + Monitoring | IN PROGRESS | 13/14 |
+| 6. Production | 6.2 Security + Polish | IN PROGRESS | 12/13 |
+| **TOTAL** | **12 sprints** | **IN PROGRESS** | **167/180** |
 
 ---
 
