@@ -368,20 +368,20 @@ npm run db:seed         # Seed default plans
 - US-6.3: As an admin, I have an internal dashboard to manage tenants
 
 **Tasks:**
-- [ ] T-6.1.1: Migrate to managed PostgreSQL (Neon free tier) — update DATABASE_URL, test all queries
-- [ ] T-6.1.2: Install and configure Sentry (`@sentry/nextjs`) — error tracking, performance monitoring
-- [ ] T-6.1.3: Install PostHog or Plausible — page views, feature usage, funnel tracking
-- [ ] T-6.1.4: Add rate limiting to API routes (`lib/api/rate-limit.ts`) — per-IP and per-user
-- [ ] T-6.1.5: Add CSRF protection to sensitive endpoints
-- [ ] T-6.1.6: Create `app/(admin)/admin/page.tsx` — internal admin dashboard (protected by admin email whitelist)
-- [ ] T-6.1.7: Admin: list all workspaces with plan, member count, created date, last active
-- [ ] T-6.1.8: Admin: view subscription status, manually extend trials, change plans
-- [ ] T-6.1.9: Admin: global stats — total users, workspaces, MRR, churn rate
-- [ ] T-6.1.10: Set up Vercel deployment — connect repo, env vars, preview deployments
+- [~] T-6.1.1: Migrate to managed PostgreSQL (Neon free tier) — update DATABASE_URL, test all queries
+- [x] T-6.1.2: Install and configure Sentry (`@sentry/nextjs`) — error tracking, performance monitoring
+- [x] T-6.1.3: Install PostHog or Plausible — page views, feature usage, funnel tracking
+- [x] T-6.1.4: Add rate limiting to API routes (`lib/api/rate-limit.ts`) — per-IP and per-user
+- [x] T-6.1.5: Add CSRF protection to sensitive endpoints
+- [x] T-6.1.6: Create `app/(admin)/admin/page.tsx` — internal admin dashboard (protected by admin email whitelist)
+- [x] T-6.1.7: Admin: list all workspaces with plan, member count, created date, last active
+- [x] T-6.1.8: Admin: view subscription status, manually extend trials, change plans
+- [x] T-6.1.9: Admin: global stats — total users, workspaces, MRR, churn rate
+- [x] T-6.1.10: Set up Vercel deployment — connect repo, env vars, preview deployments
 - [ ] T-6.1.11: Configure custom domain + SSL
 - [ ] T-6.1.12: Set up uptime monitoring (BetterStack or UptimeRobot)
-- [ ] T-6.1.13: Write unit tests for rate limiting middleware
-- [ ] T-6.1.14: Write tests for admin dashboard data queries (workspace list, subscription stats, MRR calculation)
+- [x] T-6.1.13: Write unit tests for rate limiting middleware
+- [x] T-6.1.14: Write tests for admin dashboard data queries (workspace list, subscription stats, MRR calculation)
 
 #### Sprint 6.2 — Security + Final Polish (Week 15-16)
 
@@ -420,7 +420,7 @@ npm run db:seed         # Seed default plans
 | 4. Marketing | 4.2 SEO + Legal | DONE | 11/11 |
 | 5. Export | 5.1 Export + Files | DONE | 14/14 |
 | 5. Export | 5.2 Recurring + GDPR | DONE | 14/14 |
-| 6. Production | 6.1 Infra + Monitoring | TODO | 0/14 |
+| 6. Production | 6.1 Infra + Monitoring | IN PROGRESS | 11/14 |
 | 6. Production | 6.2 Security + Polish | TODO | 0/13 |
 | **TOTAL** | **12 sprints** | **IN PROGRESS** | **153/180** |
 

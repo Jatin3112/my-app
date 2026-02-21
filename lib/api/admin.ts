@@ -2,9 +2,9 @@
 
 import { db } from "@/lib/db"
 import { users, workspaces, workspaceMembers, subscriptions } from "@/lib/db/schema"
-import { eq, count } from "drizzle-orm"
+import { eq, count, desc } from "drizzle-orm"
 
-export function isAdmin(email: string): boolean {
+export async function isAdmin(email: string): Promise<boolean> {
   const adminEmails = process.env.ADMIN_EMAILS
   if (!adminEmails) return false
   return adminEmails.split(",").map((e) => e.trim()).includes(email)
@@ -45,7 +45,7 @@ export async function getWorkspaceList() {
         db.query.subscriptions.findFirst({
           where: eq(subscriptions.workspace_id, ws.id),
           with: { plan: true },
-          orderBy: (s: typeof subscriptions.$inferSelect, { desc }: { desc: (col: unknown) => unknown }) => [desc(s.created_at)],
+          orderBy: desc(subscriptions.created_at),
         }),
       ])
       return {
@@ -64,7 +64,7 @@ export async function getWorkspaceList() {
 export async function extendTrial(workspaceId: string, days: number) {
   const sub = await db.query.subscriptions.findFirst({
     where: eq(subscriptions.workspace_id, workspaceId),
-    orderBy: (s: typeof subscriptions.$inferSelect, { desc }: { desc: (col: unknown) => unknown }) => [desc(s.created_at)],
+    orderBy: desc(subscriptions.created_at),
   })
   if (!sub) throw new Error("No subscription found")
 
@@ -81,7 +81,7 @@ export async function extendTrial(workspaceId: string, days: number) {
 export async function changeWorkspacePlan(workspaceId: string, planId: string) {
   const sub = await db.query.subscriptions.findFirst({
     where: eq(subscriptions.workspace_id, workspaceId),
-    orderBy: (s: typeof subscriptions.$inferSelect, { desc }: { desc: (col: unknown) => unknown }) => [desc(s.created_at)],
+    orderBy: desc(subscriptions.created_at),
   })
   if (!sub) throw new Error("No subscription found")
 

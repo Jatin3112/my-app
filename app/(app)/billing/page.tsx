@@ -20,7 +20,8 @@ export default function BillingPage() {
 
   const [plans, setPlans] = useState<Plan[]>([]);
   const [usage, setUsage] = useState<UsageInfo | null>(null);
-  const [payments, setPayments] = useState<PaymentRecord[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [payments, setPayments] = useState<any[]>([]);
   const [subStatus, setSubStatus] = useState<{
     isActive: boolean;
     status: string;
@@ -37,21 +38,20 @@ export default function BillingPage() {
   });
   const [loading, setLoading] = useState(true);
 
-  function loadData() {
+  async function loadData() {
     if (!currentWorkspace?.id || !userId) return;
     setLoading(true);
-    Promise.all([
+    const [status, usageData, planList, paymentList] = await Promise.all([
       getWorkspaceSubscriptionStatus(currentWorkspace.id),
       getUsageInfo(currentWorkspace.id, userId),
       getAllPlans(),
       getPaymentHistory(currentWorkspace.id),
-    ]).then(([status, usageData, planList, paymentList]) => {
-      setSubStatus({ ...status, planName: status.plan?.name ?? "No Plan" });
-      setUsage(usageData);
-      setPlans(planList);
-      setPayments(paymentList);
-      setLoading(false);
-    });
+    ]);
+    setSubStatus({ ...status, planName: status.plan?.name ?? "No Plan" });
+    setUsage(usageData);
+    setPlans(planList);
+    setPayments(paymentList as PaymentRecord[]);
+    setLoading(false);
   }
 
   useEffect(() => {
