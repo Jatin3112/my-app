@@ -159,7 +159,9 @@ npm run db:seed         # Seed default plans
 
 ### PHASE 2: Auth & Trust (Weeks 5-6)
 
-#### Sprint 2.1 — OAuth + Password Reset (Week 5-6)
+#### Sprint 2.1 — OAuth + Password Reset via NextAuth (Week 5-6)
+
+**Approach:** Leverage NextAuth.js built-in features — Drizzle adapter for DB-backed sessions/accounts, built-in OAuth providers, and `signIn("email")` magic link flow for password reset. Keeps Credentials provider for existing email+password users alongside new OAuth providers.
 
 **User Stories:**
 - US-2.1: As a new user, I can sign up with Google or GitHub in one click
@@ -168,25 +170,47 @@ npm run db:seed         # Seed default plans
 - US-2.4: As a new user, I must verify my email before accessing the app
 
 **Tasks:**
-- [ ] T-2.1.1: Add Google OAuth provider to NextAuth config (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
-- [ ] T-2.1.2: Add GitHub OAuth provider to NextAuth config (GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET)
-- [ ] T-2.1.3: Handle account linking — if OAuth email matches existing credentials user, link accounts
-- [ ] T-2.1.4: Add `accounts` table to schema for NextAuth adapter (provider, providerAccountId, userId)
-- [ ] T-2.1.5: Update login page UI — "Continue with Google" / "Continue with GitHub" buttons above email form
-- [ ] T-2.1.6: Update register page — social signup option + divider "or sign up with email"
-- [ ] T-2.1.7: Add `password_reset_tokens` table (id, user_id, token, expires_at, used)
-- [ ] T-2.1.8: Create `app/forgot-password/page.tsx` — email input form
-- [ ] T-2.1.9: Create `app/reset-password/[token]/page.tsx` — new password form
-- [ ] T-2.1.10: Create `lib/api/password-reset.ts` — generateResetToken, validateToken, resetPassword
-- [ ] T-2.1.11: Create `lib/email/templates/password-reset.ts` — reset link email template
-- [ ] T-2.1.12: Add `email_verified` boolean + `email_verification_token` to users table
-- [ ] T-2.1.13: Create `app/verify-email/[token]/page.tsx` — email verification page
-- [ ] T-2.1.14: Send verification email on registration, block access until verified
-- [ ] T-2.1.15: Add "Resend verification email" button on blocked screen
-- [ ] T-2.1.16: Write unit tests for password reset flow (generateResetToken, validateToken, resetPassword)
-- [ ] T-2.1.17: Write unit tests for OAuth account linking logic
-- [ ] T-2.1.18: Write component tests for login/register pages (OAuth buttons, form validation, error states)
-- [ ] T-2.1.19: Run full test suite + coverage, verify build passes
+
+*NextAuth Adapter + Schema (DB foundation):*
+- [x] T-2.1.1: Install `@auth/drizzle-adapter` package
+- [x] T-2.1.2: Add NextAuth adapter tables to `lib/db/schema.ts` — `accounts` (provider, providerAccountId, userId, access_token, refresh_token, expires_at), `sessions` (sessionToken, userId, expires), `verification_tokens` (identifier, token, expires) per NextAuth schema spec
+- [x] T-2.1.3: Add `email_verified` (timestamp, nullable) and `image` (text, nullable) columns to existing `users` table (NextAuth adapter expects these)
+- [x] T-2.1.4: Run `db:generate` and `db:push` for new schema
+- [x] T-2.1.5: Create custom Drizzle adapter in `lib/auth/drizzle-adapter.ts` — extend `@auth/drizzle-adapter` to work with existing `users` table (map `password` as optional since OAuth users won't have one)
+
+*OAuth Providers (Google + GitHub):*
+- [x] T-2.1.6: Add GoogleProvider to `lib/auth/auth-options.ts` (env: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
+- [x] T-2.1.7: Add GitHubProvider to `lib/auth/auth-options.ts` (env: GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET)
+- [x] T-2.1.8: Configure NextAuth `signIn` callback — if OAuth email matches existing Credentials user, auto-link by creating `accounts` row for that userId (prevents duplicate accounts)
+- [x] T-2.1.9: Keep existing CredentialsProvider working alongside OAuth — hybrid auth (Credentials for email+password, adapter for OAuth)
+- [x] T-2.1.10: Handle edge case: OAuth user tries to login with Credentials (no password set) — show helpful error "Use Google/GitHub to sign in"
+
+*Login/Register UI Updates:*
+- [x] T-2.1.11: Update `app/login/page.tsx` — add "Continue with Google" / "Continue with GitHub" buttons above email form, with "or" divider
+- [x] T-2.1.12: Update `app/register/page.tsx` — social signup buttons + divider "or sign up with email"
+- [x] T-2.1.13: Use `signIn("google")` and `signIn("github")` from `next-auth/react` for OAuth button handlers
+
+*Password Reset Flow:*
+- [x] T-2.1.14: Add `password_reset_tokens` table to schema (id, user_id, token_hash, expires_at, used_at)
+- [x] T-2.1.15: Create `lib/api/password-reset.ts` — `requestPasswordReset(email)` generates secure token, stores hash, sends email; `validateResetToken(token)` checks expiry+used; `resetPassword(token, newPassword)` updates bcrypt hash + marks token used
+- [x] T-2.1.16: Create `lib/email/templates/password-reset.ts` — reset link email template (reuse email infra from Sprint 1.3)
+- [x] T-2.1.17: Create `app/forgot-password/page.tsx` — email input form, calls requestPasswordReset server action
+- [x] T-2.1.18: Create `app/reset-password/[token]/page.tsx` — new password form with confirm, calls resetPassword server action
+- [x] T-2.1.19: Add "Forgot password?" link on login page
+
+*Email Verification:*
+- [x] T-2.1.20: On registration (Credentials), set `email_verified = null`, generate verification token, send verification email
+- [x] T-2.1.21: Create `app/verify-email/[token]/page.tsx` — verifies token, sets `email_verified = now()` on user
+- [x] T-2.1.22: Add middleware or NextAuth callback to block unverified Credentials users — redirect to "Check your email" page
+- [x] T-2.1.23: OAuth users auto-verified — set `email_verified = now()` in signIn callback (Google/GitHub already verify emails)
+- [x] T-2.1.24: Add "Resend verification email" button on blocked screen
+
+*Tests:*
+- [x] T-2.1.25: Write unit tests for password reset flow (requestPasswordReset, validateResetToken, resetPassword — valid, expired, already-used tokens)
+- [x] T-2.1.26: Write unit tests for OAuth account linking logic (new user, existing email match, already linked)
+- [x] T-2.1.27: Write unit tests for email verification (register → unverified → verify → access granted)
+- [x] T-2.1.28: Write component tests for login/register pages (OAuth buttons render, form validation, error states, forgot password link)
+- [x] T-2.1.29: Run full test suite + coverage, verify build passes
 
 ---
 
@@ -389,7 +413,7 @@ npm run db:seed         # Seed default plans
 | 1. Revenue | 1.1 DB & Plans + Tests | DONE | 19/19 |
 | 1. Revenue | 1.2 Razorpay | DONE | 12/12 |
 | 1. Revenue | 1.3 Stripe + Email | DONE | 14/14 |
-| 2. Auth | 2.1 OAuth + Reset | TODO | 0/19 |
+| 2. Auth | 2.1 OAuth + Reset (NextAuth) | DONE | 29/29 |
 | 3. AI | 3.1 Voice Parsing | TODO | 0/13 |
 | 3. AI | 3.2 Priorities + Dates | TODO | 0/13 |
 | 4. Marketing | 4.1 Landing Page | TODO | 0/14 |
@@ -398,7 +422,7 @@ npm run db:seed         # Seed default plans
 | 5. Export | 5.2 Recurring + GDPR | TODO | 0/14 |
 | 6. Production | 6.1 Infra + Monitoring | TODO | 0/14 |
 | 6. Production | 6.2 Security + Polish | TODO | 0/13 |
-| **TOTAL** | **12 sprints** | **IN PROGRESS** | **45/170** |
+| **TOTAL** | **12 sprints** | **IN PROGRESS** | **74/180** |
 
 ---
 
