@@ -11,7 +11,7 @@ import {
   type Project,
   type TimesheetEntry,
 } from "@/lib/db/schema"
-import { eq, and, asc, count, sum, gte, lte, desc, sql } from "drizzle-orm"
+import { eq, and, asc, count, sum, gte, lte, lt, desc, sql } from "drizzle-orm"
 import { getMemberRole, type Role } from "@/lib/auth/permissions"
 import { cached } from "@/lib/cache"
 import { cacheDel } from "@/lib/cache"
@@ -30,6 +30,8 @@ export type DashboardData = {
     totalHoursLogged: number
     thisWeekHours: number
     totalMembers: number
+    overdueTodos: number
+    dueTodayTodos: number
   }
   projects: Project[]
   chartData: {
@@ -98,7 +100,8 @@ export async function loadDashboardData(
   ] = await Promise.all([
     // Existing stats
     cached(`stats:${workspaceId}`, 60, async () => {
-      const [projectCount, todoCount, completedCount, totalHours, weekHours, memberCount] =
+      const today = new Date().toISOString().split("T")[0]
+      const [projectCount, todoCount, completedCount, totalHours, weekHours, memberCount, overdueCount, dueTodayCount] =
         await Promise.all([
           db.select({ count: count() }).from(projects).where(eq(projects.workspace_id, workspaceId)),
           db.select({ count: count() }).from(todos).where(eq(todos.workspace_id, workspaceId)),
@@ -108,6 +111,12 @@ export async function loadDashboardData(
             and(eq(timesheetEntries.workspace_id, workspaceId), gte(timesheetEntries.date, week.start), lte(timesheetEntries.date, week.end)),
           ),
           db.select({ count: count() }).from(workspaceMembers).where(eq(workspaceMembers.workspace_id, workspaceId)),
+          db.select({ count: count() }).from(todos).where(
+            and(eq(todos.workspace_id, workspaceId), eq(todos.completed, false), lt(todos.due_date, today))
+          ),
+          db.select({ count: count() }).from(todos).where(
+            and(eq(todos.workspace_id, workspaceId), eq(todos.completed, false), eq(todos.due_date, today))
+          ),
         ])
       const totalTodos = todoCount[0].count
       const completed = completedCount[0].count
@@ -119,6 +128,8 @@ export async function loadDashboardData(
         totalHoursLogged: Number(totalHours[0].total) || 0,
         thisWeekHours: Number(weekHours[0].total) || 0,
         totalMembers: memberCount[0].count,
+        overdueTodos: overdueCount[0].count,
+        dueTodayTodos: dueTodayCount[0].count,
       }
     }),
 

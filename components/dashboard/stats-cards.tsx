@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { FolderOpen, ListTodo, CheckCircle, Circle, Clock, CalendarClock, Users } from "lucide-react"
+import { FolderOpen, ListTodo, CheckCircle, Circle, Clock, CalendarClock, Users, AlertCircle } from "lucide-react"
 import { loadDashboardData, type DashboardData } from "@/lib/api/loaders"
 import { useWorkspace } from "@/hooks/use-workspace"
 
@@ -96,6 +96,18 @@ export function StatsCards({ stats: propStats }: StatsCardsProps = {}) {
       icon: Users,
       color: "text-indigo-500",
     },
+    ...(stats.overdueTodos > 0 ? [{
+      title: "Overdue",
+      value: stats.overdueTodos,
+      icon: AlertCircle,
+      color: "text-red-500",
+    }] : []),
+    ...(stats.dueTodayTodos > 0 ? [{
+      title: "Due Today",
+      value: stats.dueTodayTodos,
+      icon: CalendarClock,
+      color: "text-amber-500",
+    }] : []),
   ]
 
   return (

@@ -33,6 +33,8 @@ export const todos = pgTable("todos", {
   project_id: uuid("project_id").references(() => projects.id, { onDelete: "set null" }),
   completed: boolean("completed").default(false).notNull(),
   sort_order: integer("sort_order").default(0).notNull(),
+  priority: text("priority").default("none").notNull(),
+  due_date: text("due_date"),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({

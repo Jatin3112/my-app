@@ -41,7 +41,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Plus, Pencil, Trash2, Check, X, Search, GripVertical, MessageSquare } from "lucide-react"
+import { Plus, Pencil, Trash2, Check, X, Search, GripVertical, MessageSquare, AlertCircle } from "lucide-react"
 import { VoiceInput } from "@/components/ui/voice-input"
 import { toast } from "sonner"
 import {
@@ -71,6 +71,8 @@ import type { TodoPageData } from "@/lib/api/loaders"
 import { useWorkspace } from "@/hooks/use-workspace"
 import { CommentList } from "@/components/comments/comment-list"
 import { Separator } from "@/components/ui/separator"
+import { DatePicker } from "@/components/ui/date-picker"
+import { parseISO, isToday, isPast, isThisWeek } from "date-fns"
 
 type WorkspaceWithRole = {
   id: string
@@ -173,6 +175,36 @@ function SortableRow({
         </span>
       </TableCell>
       <TableCell>
+        {todo.priority !== "none" && (
+          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+            todo.priority === "high" ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400" :
+            todo.priority === "medium" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400" :
+            "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400"
+          }`}>
+            {todo.priority.charAt(0).toUpperCase() + todo.priority.slice(1)}
+          </span>
+        )}
+      </TableCell>
+      <TableCell>
+        {todo.due_date ? (() => {
+          const today = new Date().toISOString().split("T")[0]
+          const isOverdue = todo.due_date < today && !todo.completed
+          const isDueToday = todo.due_date === today
+          return (
+            <span className={`inline-flex items-center gap-1 text-xs ${
+              isOverdue ? "text-red-600 dark:text-red-400 font-medium" :
+              isDueToday && !todo.completed ? "text-amber-600 dark:text-amber-400 font-medium" :
+              "text-muted-foreground"
+            }`}>
+              {isOverdue && <AlertCircle className="size-3" />}
+              {isDueToday ? "Today" : todo.due_date}
+            </span>
+          )
+        })() : (
+          <span className="text-muted-foreground text-xs">—</span>
+        )}
+      </TableCell>
+      <TableCell>
         <div className="flex items-center gap-1">
           <Button size="sm" variant="ghost" onClick={onEdit}>
             <Pencil className="w-4 h-4" />
@@ -212,10 +244,15 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
   const [isInitialLoading, setIsInitialLoading] = useState(!initialData)
+  const [priorityFilter, setPriorityFilter] = useState<string>("all")
+  const [dueDateFilter, setDueDateFilter] = useState<string>("all")
+  const [sortBy, setSortBy] = useState<string>("default")
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     project_id: "none",
+    priority: "none",
+    due_date: "",
   })
   const [isLoading, setIsLoading] = useState(false)
   const [detailTodo, setDetailTodo] = useState<Todo | null>(null)
@@ -225,7 +262,7 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
   useKeyboardShortcuts({
     onNew: () => {
       setEditingTodo(null)
-      setFormData({ title: "", description: "", project_id: "none" })
+      setFormData({ title: "", description: "", project_id: "none", priority: "none", due_date: "" })
       setIsOpen(true)
     },
     onSearch: () => searchInputRef.current?.focus(),
@@ -249,9 +286,9 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
     const { active, over } = event
     if (!over || active.id === over.id) return
 
-    const oldIndex = filteredTodos.findIndex((t) => t.id === active.id)
-    const newIndex = filteredTodos.findIndex((t) => t.id === over.id)
-    const reordered = arrayMove(filteredTodos, oldIndex, newIndex)
+    const oldIndex = sortedTodos.findIndex((t) => t.id === active.id)
+    const newIndex = sortedTodos.findIndex((t) => t.id === over.id)
+    const reordered = arrayMove(sortedTodos, oldIndex, newIndex)
 
     // Optimistic reorder in full list
     const reorderedIds = reordered.map((t) => t.id)
@@ -323,6 +360,7 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
       const todoData = {
         ...formData,
         project_id: formData.project_id === "none" ? null : formData.project_id,
+        due_date: formData.due_date || null,
       }
 
       if (editingTodo) {
@@ -431,6 +469,8 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
       title: todo.title,
       description: todo.description || "",
       project_id: todo.project_id || "none",
+      priority: todo.priority || "none",
+      due_date: todo.due_date || "",
     })
     setIsOpen(true)
   }
@@ -438,7 +478,7 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
   function handleClose() {
     setIsOpen(false)
     setEditingTodo(null)
-    setFormData({ title: "", description: "", project_id: "none" })
+    setFormData({ title: "", description: "", project_id: "none", priority: "none", due_date: "" })
   }
 
   function getProjectName(projectId: string | null) {
@@ -456,16 +496,49 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
     if (statusFilter === "completed" && !todo.completed) return false
     if (statusFilter === "pending" && todo.completed) return false
     if (searchQuery && !todo.title.toLowerCase().includes(searchQuery.toLowerCase())) return false
+    if (priorityFilter !== "all" && todo.priority !== priorityFilter) return false
+    if (dueDateFilter !== "all") {
+      const today = new Date().toISOString().split("T")[0]
+      if (dueDateFilter === "overdue") {
+        if (!todo.due_date || todo.due_date >= today || todo.completed) return false
+      } else if (dueDateFilter === "today") {
+        if (todo.due_date !== today) return false
+      } else if (dueDateFilter === "this-week") {
+        if (!todo.due_date) return false
+        const dueDate = parseISO(todo.due_date)
+        if (!isThisWeek(dueDate, { weekStartsOn: 0 })) return false
+      } else if (dueDateFilter === "no-date") {
+        if (todo.due_date) return false
+      }
+    }
     return true
   })
 
-  const allVisibleSelected = filteredTodos.length > 0 && filteredTodos.every((t) => selectedIds.has(t.id))
+  // Apply sorting
+  const sortedTodos = sortBy === "default" ? filteredTodos : [...filteredTodos].sort((a, b) => {
+    if (sortBy === "priority") {
+      const order: Record<string, number> = { high: 0, medium: 1, low: 2, none: 3 }
+      return (order[a.priority] ?? 3) - (order[b.priority] ?? 3)
+    }
+    if (sortBy === "due-date") {
+      if (!a.due_date && !b.due_date) return 0
+      if (!a.due_date) return 1
+      if (!b.due_date) return -1
+      return a.due_date.localeCompare(b.due_date)
+    }
+    if (sortBy === "created") {
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    }
+    return 0
+  })
+
+  const allVisibleSelected = sortedTodos.length > 0 && sortedTodos.every((t) => selectedIds.has(t.id))
 
   function toggleSelectAll() {
     if (allVisibleSelected) {
       setSelectedIds(new Set())
     } else {
-      setSelectedIds(new Set(filteredTodos.map((t) => t.id)))
+      setSelectedIds(new Set(sortedTodos.map((t) => t.id)))
     }
   }
 
@@ -496,6 +569,8 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
                 <TableHead>Title</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead>Project</TableHead>
+                <TableHead>Priority</TableHead>
+                <TableHead>Due Date</TableHead>
                 <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -508,6 +583,8 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
                   <TableCell><div className="h-4 w-40 bg-muted animate-pulse rounded" /></TableCell>
                   <TableCell><div className="h-4 w-24 bg-muted animate-pulse rounded" /></TableCell>
                   <TableCell><div className="h-5 w-20 bg-muted animate-pulse rounded" /></TableCell>
+                  <TableCell><div className="h-5 w-14 bg-muted animate-pulse rounded" /></TableCell>
+                  <TableCell><div className="h-4 w-16 bg-muted animate-pulse rounded" /></TableCell>
                   <TableCell><div className="h-4 w-16 bg-muted animate-pulse rounded" /></TableCell>
                 </TableRow>
               ))}
@@ -526,7 +603,7 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
           <h2 className="text-2xl font-bold">Todos</h2>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => { setEditingTodo(null); setFormData({ title: "", description: "", project_id: "none" }); }}>
+              <Button onClick={() => { setEditingTodo(null); setFormData({ title: "", description: "", project_id: "none", priority: "none", due_date: "" }); }}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Todo
               </Button>
@@ -581,6 +658,47 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="priority">Priority</Label>
+                      <Select
+                        value={formData.priority}
+                        onValueChange={(value) => setFormData({ ...formData, priority: value })}
+                      >
+                        <SelectTrigger id="priority" className="w-full">
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Due Date</Label>
+                      <div className="flex items-center gap-1">
+                        <DatePicker
+                          value={formData.due_date}
+                          onChange={(value) => setFormData({ ...formData, due_date: value })}
+                          placeholder="No due date"
+                          className="w-full"
+                        />
+                        {formData.due_date && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => setFormData({ ...formData, due_date: "" })}
+                          >
+                            <X className="size-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <DialogFooter>
@@ -637,6 +755,41 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
               </button>
             ))}
           </div>
+          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Priorities</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="low">Low</SelectItem>
+              <SelectItem value="none">None</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={dueDateFilter} onValueChange={setDueDateFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Due date" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Dates</SelectItem>
+              <SelectItem value="overdue">Overdue</SelectItem>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="this-week">This Week</SelectItem>
+              <SelectItem value="no-date">No Date</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Default Order</SelectItem>
+              <SelectItem value="priority">Priority (High→Low)</SelectItem>
+              <SelectItem value="due-date">Due Date (Earliest)</SelectItem>
+              <SelectItem value="created">Created (Newest)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -657,21 +810,23 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
                 <TableHead>Title</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead>Project</TableHead>
+                <TableHead>Priority</TableHead>
+                <TableHead>Due Date</TableHead>
                 <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredTodos.length === 0 ? (
+              {sortedTodos.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    {searchQuery || statusFilter !== "all" || filterProjectId !== "all"
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                    {searchQuery || statusFilter !== "all" || filterProjectId !== "all" || priorityFilter !== "all" || dueDateFilter !== "all"
                       ? "No todos match your filters."
                       : "No todos found. Create one to get started!"}
                   </TableCell>
                 </TableRow>
               ) : (
-                <SortableContext items={filteredTodos.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-                  {filteredTodos.map((todo) => (
+                <SortableContext items={sortedTodos.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+                  {sortedTodos.map((todo) => (
                     <SortableRow
                       key={todo.id}
                       todo={todo}
@@ -743,13 +898,27 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="flex items-center gap-4 text-sm">
+            <div className="flex flex-wrap items-center gap-3 text-sm">
               <span className={`px-2 py-0.5 rounded text-xs ${detailTodo?.completed ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"}`}>
                 {detailTodo?.completed ? "Completed" : "Pending"}
               </span>
+              {detailTodo?.priority && detailTodo.priority !== "none" && (
+                <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                  detailTodo.priority === "high" ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400" :
+                  detailTodo.priority === "medium" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400" :
+                  "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400"
+                }`}>
+                  {detailTodo.priority.charAt(0).toUpperCase() + detailTodo.priority.slice(1)}
+                </span>
+              )}
               <span className="text-muted-foreground">
                 Project: {getProjectName(detailTodo?.project_id || null)}
               </span>
+              {detailTodo?.due_date && (
+                <span className="text-muted-foreground">
+                  Due: {detailTodo.due_date}
+                </span>
+              )}
             </div>
             <Separator />
             {detailTodo && <CommentList todoId={detailTodo.id} />}

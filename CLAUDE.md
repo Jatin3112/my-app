@@ -246,19 +246,19 @@ npm run db:seed         # Seed default plans
 - US-3.6: As a user, I can filter and sort todos by priority and due date
 
 **Tasks:**
-- [ ] T-3.2.1: Add `priority` enum column (high, medium, low, none) to todos table
-- [ ] T-3.2.2: Add `due_date` date column to todos table
-- [ ] T-3.2.3: Run `db:generate` and `db:push` for schema changes
-- [ ] T-3.2.4: Update `createTodo` and `updateTodo` server actions to handle priority + due_date
-- [ ] T-3.2.5: Update `components/todos/todo-list.tsx` — priority badge (color-coded), due date display, overdue styling (red)
-- [ ] T-3.2.6: Add priority selector dropdown to todo create/edit form
-- [ ] T-3.2.7: Add date picker for due date in todo create/edit form
-- [ ] T-3.2.8: Add filter bar — filter by priority, filter by due (overdue, today, this week, no date)
-- [ ] T-3.2.9: Add sort options — by priority, by due date, by created date, by name
-- [ ] T-3.2.10: Update dashboard stats — add "overdue todos" count, "due today" count
-- [ ] T-3.2.11: Write unit tests for priority/due date in todo server actions (create, update, filter, sort)
-- [ ] T-3.2.12: Write component tests for todo list (priority badges, due date display, overdue styling, filter bar)
-- [ ] T-3.2.13: Run full test suite + coverage, verify build passes
+- [x] T-3.2.1: Add `priority` enum column (high, medium, low, none) to todos table
+- [x] T-3.2.2: Add `due_date` date column to todos table
+- [x] T-3.2.3: Run `db:generate` and `db:push` for schema changes
+- [x] T-3.2.4: Update `createTodo` and `updateTodo` server actions to handle priority + due_date
+- [x] T-3.2.5: Update `components/todos/todo-list.tsx` — priority badge (color-coded), due date display, overdue styling (red)
+- [x] T-3.2.6: Add priority selector dropdown to todo create/edit form
+- [x] T-3.2.7: Add date picker for due date in todo create/edit form
+- [x] T-3.2.8: Add filter bar — filter by priority, filter by due (overdue, today, this week, no date)
+- [x] T-3.2.9: Add sort options — by priority, by due date, by created date, by name
+- [x] T-3.2.10: Update dashboard stats — add "overdue todos" count, "due today" count
+- [x] T-3.2.11: Write unit tests for priority/due date in todo server actions (create, update, filter, sort)
+- [x] T-3.2.12: Write component tests for todo list (priority badges, due date display, overdue styling, filter bar)
+- [x] T-3.2.13: Run full test suite + coverage, verify build passes
 
 ---
 
@@ -415,14 +415,14 @@ npm run db:seed         # Seed default plans
 | 1. Revenue | 1.3 Stripe + Email | DONE | 14/14 |
 | 2. Auth | 2.1 OAuth + Reset (NextAuth) | DONE | 29/29 |
 | 3. AI | 3.1 Voice Parsing | DONE | 13/13 |
-| 3. AI | 3.2 Priorities + Dates | TODO | 0/13 |
+| 3. AI | 3.2 Priorities + Dates | DONE | 13/13 |
 | 4. Marketing | 4.1 Landing Page | TODO | 0/14 |
 | 4. Marketing | 4.2 SEO + Legal | TODO | 0/11 |
 | 5. Export | 5.1 Export + Files | TODO | 0/14 |
 | 5. Export | 5.2 Recurring + GDPR | TODO | 0/14 |
 | 6. Production | 6.1 Infra + Monitoring | TODO | 0/14 |
 | 6. Production | 6.2 Security + Polish | TODO | 0/13 |
-| **TOTAL** | **12 sprints** | **IN PROGRESS** | **87/180** |
+| **TOTAL** | **12 sprints** | **IN PROGRESS** | **100/180** |
 
 ---
 
