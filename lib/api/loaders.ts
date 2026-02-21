@@ -16,6 +16,7 @@ import { getMemberRole, type Role } from "@/lib/auth/permissions"
 import { cached } from "@/lib/cache"
 import { cacheDel } from "@/lib/cache"
 import { createTrialSubscription } from "./subscriptions"
+import { getOnboardingStatus, type OnboardingStatus } from "@/lib/api/onboarding"
 
 // ---------------------------------------------------------------------------
 // Dashboard: stats + projects + charts + activity in a single server action
@@ -50,6 +51,7 @@ export type DashboardData = {
     totalTodos: number
     completedTodos: number
   }[]
+  onboarding?: OnboardingStatus
 }
 
 function getWeekRange() {
@@ -240,7 +242,10 @@ export async function loadDashboardData(
     completedTodos: Number(row.completedTodos) || 0,
   }))
 
-  return { stats, projects: projectList, chartData, recentActivity, projectProgress }
+  // Load onboarding status
+  const onboarding = await getOnboardingStatus(userId)
+
+  return { stats, projects: projectList, chartData, recentActivity, projectProgress, onboarding }
 }
 
 // ---------------------------------------------------------------------------

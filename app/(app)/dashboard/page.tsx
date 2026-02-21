@@ -9,6 +9,7 @@ import { HoursByProjectChart } from "@/components/dashboard/charts/hours-by-proj
 import { WeeklyActivityChart } from "@/components/dashboard/charts/weekly-activity-chart"
 import { RecentActivity } from "@/components/dashboard/recent-activity"
 import { ProjectProgress } from "@/components/dashboard/project-progress"
+import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist"
 import { useWorkspace } from "@/hooks/use-workspace"
 import { loadHomePageData, type DashboardData } from "@/lib/api/loaders"
 import { LayoutDashboard } from "lucide-react"
@@ -54,6 +55,11 @@ export default function Home() {
             </p>
           </div>
         </div>
+
+        {/* Onboarding Checklist */}
+        {data?.onboarding && (
+          <OnboardingChecklist status={data.onboarding} userId={userId} />
+        )}
 
         {/* Key Metrics */}
         <KeyMetrics stats={data?.stats ?? null} />
