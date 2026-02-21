@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useWorkspace } from "@/hooks/use-workspace";
-import { Plus, Mic, MicOff, CheckSquare, Clock } from "lucide-react";
+import { Plus, Mic, MicOff, CheckSquare, Clock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -74,7 +74,7 @@ function getSpeechRecognition(): (new () => SpeechRecognitionInstance) | null {
   );
 }
 
-type Step = "select" | "record" | "details";
+type Step = "select" | "record" | "parsing" | "details";
 type CaptureType = "todo" | "timesheet" | null;
 
 export function QuickCaptureButton() {
@@ -207,13 +207,70 @@ export function QuickCaptureButton() {
     setIsRecording(false);
   };
 
-  const advanceToDetails = () => {
+  const advanceAfterRecording = async () => {
     stopRecording();
-    if (captureType === "todo") {
-      setTodoTitle(transcribedText);
-    } else {
-      setTsDescription(transcribedText);
+    const text = transcribedText.trim();
+
+    // If no text (user skipped voice), go straight to details
+    if (!text) {
+      setStep("details");
+      return;
     }
+
+    // Show parsing step and call AI
+    setStep("parsing");
+
+    try {
+      const response = await fetch("/api/ai/parse-voice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text,
+          type: captureType,
+          projects: projects.map((p) => ({ name: p.name, id: p.id })),
+        }),
+      });
+
+      if (!response.ok) throw new Error("Parse failed");
+
+      const result = await response.json();
+
+      if (result.type === "todo" && result.data) {
+        setTodoTitle(result.data.title || text);
+        setTodoDescription(result.data.description || "");
+        if (result.data.project_id) {
+          setTodoProjectId(result.data.project_id);
+        }
+      } else if (result.type === "timesheet" && result.data) {
+        setTsDescription(result.data.task_description || text);
+        if (result.data.project) {
+          // Find project name match for the select
+          const matchedProject = projects.find(
+            (p) => p.name.toLowerCase() === result.data.project.toLowerCase()
+          );
+          if (matchedProject) {
+            setTsProjectName(matchedProject.name);
+          }
+        }
+        if (result.data.hours) {
+          setTsHours(String(result.data.hours));
+        }
+        if (result.data.date) {
+          setTsDate(result.data.date);
+        }
+        if (result.data.notes) {
+          setTsNotes(result.data.notes);
+        }
+      }
+    } catch {
+      // Fallback: use raw text
+      if (captureType === "todo") {
+        setTodoTitle(text);
+      } else {
+        setTsDescription(text);
+      }
+    }
+
     setStep("details");
   };
 
@@ -365,7 +422,7 @@ export function QuickCaptureButton() {
 
                 <div className="flex gap-3 pt-2">
                   {(transcribedText || !isRecording) && (
-                    <Button onClick={advanceToDetails}>
+                    <Button onClick={advanceAfterRecording}>
                       {transcribedText ? "Continue" : "Skip voice input"}
                     </Button>
                   )}
@@ -374,7 +431,25 @@ export function QuickCaptureButton() {
             </>
           )}
 
-          {/* Step 3: Details Form */}
+          {/* Step 3: AI Parsing */}
+          {step === "parsing" && (
+            <>
+              <DialogHeader>
+                <DialogTitle>AI parsing...</DialogTitle>
+                <DialogDescription>
+                  Extracting details from your voice input
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex flex-col items-center gap-4 py-8">
+                <Loader2 className="size-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground text-center px-4">
+                  &ldquo;{transcribedText}&rdquo;
+                </p>
+              </div>
+            </>
+          )}
+
+          {/* Step 4: Details Form */}
           {step === "details" && captureType === "todo" && (
             <>
               <DialogHeader>
