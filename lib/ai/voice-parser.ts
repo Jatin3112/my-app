@@ -2,13 +2,8 @@
 
 import OpenAI from "openai";
 
-let client: OpenAI | null = null;
-
 function getClient() {
-  if (!client) {
-    client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  }
-  return client;
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 }
 
 export interface ParsedTodo {
