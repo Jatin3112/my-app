@@ -8,6 +8,13 @@ export const users = pgTable("users", {
   name: text("name"),
   email_verified: timestamp("email_verified"),
   image: text("image"),
+  onboarding: json("onboarding").$type<{
+    created_project?: boolean
+    added_todo?: boolean
+    tried_voice?: boolean
+    invited_member?: boolean
+    dismissed?: boolean
+  }>().default({}),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -35,6 +42,9 @@ export const todos = pgTable("todos", {
   sort_order: integer("sort_order").default(0).notNull(),
   priority: text("priority").default("none").notNull(),
   due_date: text("due_date"),
+  recurrence_rule: text("recurrence_rule"),
+  recurrence_end_date: text("recurrence_end_date"),
+  parent_todo_id: uuid("parent_todo_id"),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
