@@ -54,7 +54,7 @@ export default function WorkspaceSettingsPage() {
       await deleteWorkspace(userId, workspaceId)
       await refreshWorkspaces()
       toast.success("Workspace deleted")
-      router.push("/")
+      router.push("/dashboard")
     } catch (error: any) {
       toast.error(error.message || "Failed to delete workspace")
     }
@@ -67,7 +67,7 @@ export default function WorkspaceSettingsPage() {
       await leaveWorkspace(userId, workspaceId)
       await refreshWorkspaces()
       toast.success("Left workspace")
-      router.push("/")
+      router.push("/dashboard")
     } catch (error: any) {
       toast.error(error.message || "Failed to leave workspace")
     }

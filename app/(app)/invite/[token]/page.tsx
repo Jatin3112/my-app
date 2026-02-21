@@ -73,7 +73,7 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
         <CardContent className="text-center">
           {state !== "loading" && (
             <Button asChild>
-              <Link href="/">Go to Dashboard</Link>
+              <Link href="/dashboard">Go to Dashboard</Link>
             </Button>
           )}
         </CardContent>

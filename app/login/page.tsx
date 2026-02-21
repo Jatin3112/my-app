@@ -45,7 +45,7 @@ function LoginForm() {
         if (inviteToken) {
           router.push(`/invite/${inviteToken}`)
         } else {
-          router.push("/")
+          router.push("/dashboard")
         }
         router.refresh()
       }
@@ -57,7 +57,7 @@ function LoginForm() {
   }
 
   const handleOAuthSignIn = (provider: string) => {
-    signIn(provider, { callbackUrl: inviteToken ? `/invite/${inviteToken}` : "/" })
+    signIn(provider, { callbackUrl: inviteToken ? `/invite/${inviteToken}` : "/dashboard" })
   }
 
   const handleResendVerification = async () => {

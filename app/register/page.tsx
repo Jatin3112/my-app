@@ -21,7 +21,7 @@ export default function RegisterPage() {
   const [verificationSent, setVerificationSent] = useState(false)
 
   const handleOAuthSignIn = (provider: string) => {
-    signIn(provider, { callbackUrl: "/" })
+    signIn(provider, { callbackUrl: "/dashboard" })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -9,7 +9,7 @@ import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher"
 import { PlanBadge } from "@/components/billing/plan-badge"
 
 const navItems = [
-  { href: "/", label: "Home", icon: Home },
+  { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/todos", label: "Todos", icon: CheckSquare },
   { href: "/projects", label: "Projects", icon: FolderOpen },
   { href: "/timesheet", label: "Timesheet", icon: Clock },
