@@ -8,6 +8,7 @@ import { createNotification } from '@/lib/api/notifications'
 import { getNextDueDate, shouldGenerateNextOccurrence } from '@/lib/api/recurrence'
 import { cacheDel } from '@/lib/cache'
 import { updateOnboardingStep } from '@/lib/api/onboarding'
+import { sanitizeText } from '@/lib/api/sanitize'
 
 export async function getTodos(workspaceId: string, userId: string, project_id?: string): Promise<Todo[]> {
   await requirePermission(userId, workspaceId, "todo:view_all")
@@ -32,6 +33,8 @@ export async function createTodo(workspaceId: string, userId: string, todo: Omit
   const [data] = await db.insert(todos)
     .values({
       ...todo,
+      title: sanitizeText(todo.title),
+      description: todo.description ? sanitizeText(todo.description) : undefined,
       user_id: userId,
       workspace_id: workspaceId,
       sort_order: nextOrder,
@@ -58,8 +61,12 @@ export async function updateTodo(workspaceId: string, userId: string, id: string
   if (existing.user_id !== userId) {
     await requirePermission(userId, workspaceId, "todo:edit_any")
   }
+  const sanitized: Partial<NewTodo> = { ...todo }
+  if (sanitized.title !== undefined) sanitized.title = sanitizeText(sanitized.title)
+  if (sanitized.description != null) sanitized.description = sanitizeText(sanitized.description)
+
   const [data] = await db.update(todos)
-    .set({ ...todo, updated_at: new Date() } as any)
+    .set({ ...sanitized, updated_at: new Date() } as any)
     .where(eq(todos.id, id))
     .returning()
 

@@ -5,6 +5,7 @@ import { comments, users, todos, type Comment } from "@/lib/db/schema"
 import { eq, and, asc } from "drizzle-orm"
 import { requirePermission, getMemberRole } from "@/lib/auth/permissions"
 import { createNotification } from "@/lib/api/notifications"
+import { sanitizeHtml } from "@/lib/api/sanitize"
 
 export async function getComments(todoId: string, workspaceId: string) {
   const data = await db.query.comments.findMany({
@@ -40,7 +41,7 @@ export async function createComment(
       todo_id: todoId,
       workspace_id: workspaceId,
       user_id: userId,
-      content,
+      content: sanitizeHtml(content),
       updated_at: new Date(),
     })
     .returning()
@@ -65,7 +66,7 @@ export async function updateComment(
 
   const [updated] = await db
     .update(comments)
-    .set({ content, updated_at: new Date() })
+    .set({ content: sanitizeHtml(content), updated_at: new Date() })
     .where(eq(comments.id, commentId))
     .returning()
 

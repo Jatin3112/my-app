@@ -236,7 +236,7 @@ export function TimesheetList() {
   async function handleBulkDelete() {
     const ids = Array.from(selectedIds)
     try {
-      await bulkDeleteTimesheetEntries(ids, workspaceId)
+      await bulkDeleteTimesheetEntries(ids, workspaceId!, userId!)
       toast.success(`${ids.length} entry(ies) deleted`)
       setSelectedIds(new Set())
       await loadEntries()

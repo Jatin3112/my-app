@@ -8,6 +8,7 @@ import { createNotification } from '@/lib/api/notifications'
 import { cached, cacheDel } from '@/lib/cache'
 import { canAddProject } from "./plan-enforcement"
 import { updateOnboardingStep } from "@/lib/api/onboarding"
+import { sanitizeText } from "@/lib/api/sanitize"
 
 export async function getProjects(workspaceId: string, userId: string): Promise<Project[]> {
   await requirePermission(userId, workspaceId, "todo:view_all")
@@ -28,6 +29,8 @@ export async function createProject(workspaceId: string, userId: string, project
   const [data] = await db.insert(projects)
     .values({
       ...project,
+      name: sanitizeText(project.name),
+      description: project.description ? sanitizeText(project.description) : undefined,
       user_id: userId,
       workspace_id: workspaceId,
       updated_at: new Date()
@@ -52,8 +55,12 @@ export async function updateProject(workspaceId: string, userId: string, id: str
   if (existing.user_id !== userId) {
     await requirePermission(userId, workspaceId, "project:edit_any")
   }
+  const sanitized: Partial<NewProject> = { ...project }
+  if (sanitized.name !== undefined) sanitized.name = sanitizeText(sanitized.name)
+  if (sanitized.description != null) sanitized.description = sanitizeText(sanitized.description)
+
   const [data] = await db.update(projects)
-    .set({ ...project, updated_at: new Date() } as any)
+    .set({ ...sanitized, updated_at: new Date() } as any)
     .where(eq(projects.id, id))
     .returning()
 

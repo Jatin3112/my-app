@@ -306,7 +306,7 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
     setTodos([...reordered, ...nonFiltered])
 
     try {
-      await reorderTodos(reorderedIds)
+      await reorderTodos(reorderedIds, workspaceId!, userId!)
     } catch (error) {
       await loadTodos()
       toast.error("Failed to reorder todos")
@@ -452,7 +452,7 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
   async function handleBulkDelete() {
     const ids = Array.from(selectedIds)
     try {
-      await bulkDeleteTodos(ids, workspaceId)
+      await bulkDeleteTodos(ids, workspaceId!, userId!)
       toast.success(`${ids.length} todo(s) deleted`)
       setSelectedIds(new Set())
       await loadTodos()
@@ -470,7 +470,7 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
       prev.map((t) => (ids.includes(t.id) ? { ...t, completed } : t))
     )
     try {
-      await bulkToggleTodos(ids, completed, workspaceId)
+      await bulkToggleTodos(ids, completed, workspaceId!, userId!)
       setSelectedIds(new Set())
     } catch (error) {
       await loadTodos()

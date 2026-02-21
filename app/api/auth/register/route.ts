@@ -6,9 +6,19 @@ import bcrypt from "bcrypt"
 import { createWorkspace } from "@/lib/api/workspaces"
 import { acceptInvitation } from "@/lib/api/invitations"
 import { sendVerificationEmail } from "@/lib/api/email-verification"
+import { rateLimit } from "@/lib/api/rate-limit"
+import { headers } from "next/headers"
 
 export async function POST(req: Request) {
   try {
+    const headerList = await headers()
+    const ip = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
+
+    const rl = rateLimit(`register:${ip}`, 5, 3600000) // 5 per hour
+    if (!rl.success) {
+      return NextResponse.json({ error: "Too many registration attempts. Please try again later." }, { status: 429 })
+    }
+
     const { email, password, name, inviteToken } = await req.json()
 
     if (!email || !password) {

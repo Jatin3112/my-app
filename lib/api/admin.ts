@@ -3,6 +3,8 @@
 import { db } from "@/lib/db"
 import { users, workspaces, workspaceMembers, subscriptions } from "@/lib/db/schema"
 import { eq, count, desc } from "drizzle-orm"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth/auth-options"
 
 export async function isAdmin(email: string): Promise<boolean> {
   const adminEmails = process.env.ADMIN_EMAILS
@@ -10,7 +12,16 @@ export async function isAdmin(email: string): Promise<boolean> {
   return adminEmails.split(",").map((e) => e.trim()).includes(email)
 }
 
+async function requireAdmin() {
+  const session = await getServerSession(authOptions)
+  const email = session?.user?.email
+  if (!email || !(await isAdmin(email))) {
+    throw new Error("Unauthorized: admin access required")
+  }
+}
+
 export async function getAdminStats() {
+  await requireAdmin()
   const [userCount, workspaceCount, activeTrials, activeSubscriptions] = await Promise.all([
     db.select({ count: count() }).from(users),
     db.select({ count: count() }).from(workspaces),
@@ -27,6 +38,7 @@ export async function getAdminStats() {
 }
 
 export async function getWorkspaceList() {
+  await requireAdmin()
   const result = await db
     .select({
       id: workspaces.id,
@@ -62,6 +74,7 @@ export async function getWorkspaceList() {
 }
 
 export async function extendTrial(workspaceId: string, days: number) {
+  await requireAdmin()
   const sub = await db.query.subscriptions.findFirst({
     where: eq(subscriptions.workspace_id, workspaceId),
     orderBy: desc(subscriptions.created_at),
@@ -79,6 +92,7 @@ export async function extendTrial(workspaceId: string, days: number) {
 }
 
 export async function changeWorkspacePlan(workspaceId: string, planId: string) {
+  await requireAdmin()
   const sub = await db.query.subscriptions.findFirst({
     where: eq(subscriptions.workspace_id, workspaceId),
     orderBy: desc(subscriptions.created_at),

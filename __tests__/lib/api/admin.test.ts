@@ -18,37 +18,55 @@ vi.mock("@/lib/db/schema", () => ({
   plans: { price_inr: "price_inr" },
 }))
 
+vi.mock("next-auth", () => ({
+  getServerSession: vi.fn(),
+}))
+
+vi.mock("@/lib/auth/auth-options", () => ({
+  authOptions: {},
+}))
+
 import { isAdmin, getAdminStats, extendTrial, changeWorkspacePlan } from "@/lib/api/admin"
 import { db } from "@/lib/db"
+import { getServerSession } from "next-auth"
+
+function mockAdminSession() {
+  process.env.ADMIN_EMAILS = "admin@test.com"
+  vi.mocked(getServerSession).mockResolvedValue({
+    user: { email: "admin@test.com" },
+    expires: "",
+  })
+}
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mockAdminSession()
 })
 
 describe("isAdmin", () => {
-  it("returns true for whitelisted email", () => {
+  it("returns true for whitelisted email", async () => {
     process.env.ADMIN_EMAILS = "admin@test.com,boss@test.com"
-    expect(isAdmin("admin@test.com")).toBe(true)
+    expect(await isAdmin("admin@test.com")).toBe(true)
   })
 
-  it("returns true for second whitelisted email", () => {
+  it("returns true for second whitelisted email", async () => {
     process.env.ADMIN_EMAILS = "admin@test.com,boss@test.com"
-    expect(isAdmin("boss@test.com")).toBe(true)
+    expect(await isAdmin("boss@test.com")).toBe(true)
   })
 
-  it("returns false for non-whitelisted email", () => {
+  it("returns false for non-whitelisted email", async () => {
     process.env.ADMIN_EMAILS = "admin@test.com"
-    expect(isAdmin("hacker@test.com")).toBe(false)
+    expect(await isAdmin("hacker@test.com")).toBe(false)
   })
 
-  it("returns false when ADMIN_EMAILS not set", () => {
+  it("returns false when ADMIN_EMAILS not set", async () => {
     delete process.env.ADMIN_EMAILS
-    expect(isAdmin("admin@test.com")).toBe(false)
+    expect(await isAdmin("admin@test.com")).toBe(false)
   })
 
-  it("trims whitespace from email list", () => {
+  it("trims whitespace from email list", async () => {
     process.env.ADMIN_EMAILS = "admin@test.com , boss@test.com"
-    expect(isAdmin("boss@test.com")).toBe(true)
+    expect(await isAdmin("boss@test.com")).toBe(true)
   })
 })
 

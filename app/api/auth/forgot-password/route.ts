@@ -1,8 +1,18 @@
 import { NextResponse } from "next/server";
 import { requestPasswordReset } from "@/lib/api/password-reset";
+import { rateLimit } from "@/lib/api/rate-limit"
+import { headers } from "next/headers"
 
 export async function POST(req: Request) {
   try {
+    const headerList = await headers()
+    const ip = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
+
+    const rl = rateLimit(`forgot:${ip}`, 3, 900000) // 3 per 15 min
+    if (!rl.success) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 })
+    }
+
     const { email } = await req.json();
 
     if (!email) {

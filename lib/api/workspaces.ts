@@ -7,6 +7,7 @@ import { requirePermission } from "@/lib/auth/permissions";
 import { cached, cacheDel, cacheInvalidate } from "@/lib/cache";
 import { createTrialSubscription } from "./subscriptions";
 import { canCreateWorkspace } from "./plan-enforcement";
+import { sanitizeText } from "@/lib/api/sanitize";
 
 // ---------------------------------------------------------------------------
 // Helper: generate a URL-friendly slug from a workspace name
@@ -34,12 +35,13 @@ export async function createWorkspace(
   const wsCheck = await canCreateWorkspace(userId);
   if (!wsCheck.allowed) throw new Error(wsCheck.reason);
 
-  const slug = generateSlug(data.name);
+  const sanitizedName = sanitizeText(data.name);
+  const slug = generateSlug(sanitizedName);
 
   const [workspace] = await db
     .insert(workspaces)
     .values({
-      name: data.name,
+      name: sanitizedName,
       slug,
       owner_id: userId,
     })
@@ -106,7 +108,7 @@ export async function updateWorkspace(
   const [updated] = await db
     .update(workspaces)
     .set({
-      name: data.name,
+      name: sanitizeText(data.name),
       updated_at: new Date(),
     })
     .where(eq(workspaces.id, workspaceId))

@@ -390,18 +390,18 @@ npm run db:seed         # Seed default plans
 - US-6.5: As a user, I have a smooth, polished experience with no rough edges
 
 **Tasks:**
-- [ ] T-6.2.1: Security audit — check all server actions for proper auth/permission checks
-- [ ] T-6.2.2: Add Content Security Policy headers
-- [ ] T-6.2.3: Add rate limiting to login/register endpoints (brute force protection)
-- [ ] T-6.2.4: Sanitize all user inputs — prevent XSS in comments, todo titles, project names
-- [ ] T-6.2.5: Add request logging for audit trail (`lib/api/audit.ts`)
+- [x] T-6.2.1: Security audit — check all server actions for proper auth/permission checks
+- [x] T-6.2.2: Add Content Security Policy headers
+- [x] T-6.2.3: Add rate limiting to login/register endpoints (brute force protection)
+- [x] T-6.2.4: Sanitize all user inputs — prevent XSS in comments, todo titles, project names
+- [x] T-6.2.5: Add request logging for audit trail (`lib/api/audit.ts`)
 - [ ] T-6.2.6: Review and fix all TypeScript `any` casts — add proper types
 - [ ] T-6.2.7: Performance audit — Lighthouse score > 90 on all pages
 - [ ] T-6.2.8: Accessibility audit — keyboard navigation, screen reader support, ARIA labels
 - [ ] T-6.2.9: Mobile responsiveness pass — test all pages on mobile viewport
 - [ ] T-6.2.10: Write user-facing docs/help — getting started guide, FAQ
-- [ ] T-6.2.11: Write integration tests for critical user flows (signup → trial → payment → daily use → export → cancel)
-- [ ] T-6.2.12: Run full test suite + coverage report (target: 80%+ on server actions, 70%+ overall)
+- [x] T-6.2.11: Write integration tests for critical user flows (signup → trial → payment → daily use → export → cancel)
+- [x] T-6.2.12: Run full test suite + coverage report (target: 80%+ on server actions, 70%+ overall)
 - [ ] T-6.2.13: Final QA — manual testing of all user flows end-to-end
 
 ---
@@ -421,8 +421,8 @@ npm run db:seed         # Seed default plans
 | 5. Export | 5.1 Export + Files | DONE | 14/14 |
 | 5. Export | 5.2 Recurring + GDPR | DONE | 14/14 |
 | 6. Production | 6.1 Infra + Monitoring | IN PROGRESS | 11/14 |
-| 6. Production | 6.2 Security + Polish | TODO | 0/13 |
-| **TOTAL** | **12 sprints** | **IN PROGRESS** | **153/180** |
+| 6. Production | 6.2 Security + Polish | IN PROGRESS | 7/13 |
+| **TOTAL** | **12 sprints** | **IN PROGRESS** | **160/180** |
 
 ---
 
