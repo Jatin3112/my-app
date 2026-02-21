@@ -272,20 +272,20 @@ npm run db:seed         # Seed default plans
 - US-4.3: As a visitor, I can see a demo/GIF of the voice capture feature
 
 **Tasks:**
-- [ ] T-4.1.1: Create `app/(marketing)/layout.tsx` — marketing layout (no sidebar, different nav)
-- [ ] T-4.1.2: Create `app/(marketing)/page.tsx` — landing page (replaces current dashboard as root)
-- [ ] T-4.1.3: Move current dashboard to `app/(app)/dashboard/page.tsx` (route group for authenticated app)
-- [ ] T-4.1.4: Build hero section — headline, subheadline, CTA button, hero image/GIF of voice capture
-- [ ] T-4.1.5: Build features grid — 6 feature cards (voice capture, timesheets, projects, team, dashboard, notifications)
-- [ ] T-4.1.6: Build "How it works" section — 3-step flow (Speak → AI Parses → Auto-fills)
-- [ ] T-4.1.7: Build social proof section — testimonials placeholder, "Used by X freelancers"
-- [ ] T-4.1.8: Create `app/(marketing)/pricing/page.tsx` — dedicated pricing page
-- [ ] T-4.1.9: Build pricing table component — INR/USD toggle, 3 plan cards, feature comparison matrix
-- [ ] T-4.1.10: Build FAQ section — 8-10 common questions (accordion)
-- [ ] T-4.1.11: Build footer — links, social, legal pages
-- [ ] T-4.1.12: Build marketing navbar — logo, features, pricing, login, "Start Free Trial" CTA
-- [ ] T-4.1.13: Write component tests for landing page sections (hero, features, pricing table, FAQ)
-- [ ] T-4.1.14: Write component tests for INR/USD toggle and pricing card rendering
+- [x] T-4.1.1: Create `app/(marketing)/layout.tsx` — marketing layout (no sidebar, different nav)
+- [x] T-4.1.2: Create `app/(marketing)/page.tsx` — landing page (replaces current dashboard as root)
+- [x] T-4.1.3: Move current dashboard to `app/(app)/dashboard/page.tsx` (route group for authenticated app)
+- [x] T-4.1.4: Build hero section — headline, subheadline, CTA button, hero image/GIF of voice capture
+- [x] T-4.1.5: Build features grid — 6 feature cards (voice capture, timesheets, projects, team, dashboard, notifications)
+- [x] T-4.1.6: Build "How it works" section — 3-step flow (Speak → AI Parses → Auto-fills)
+- [x] T-4.1.7: Build social proof section — testimonials placeholder, "Used by X freelancers"
+- [x] T-4.1.8: Create `app/(marketing)/pricing/page.tsx` — dedicated pricing page
+- [x] T-4.1.9: Build pricing table component — INR/USD toggle, 3 plan cards, feature comparison matrix
+- [x] T-4.1.10: Build FAQ section — 8-10 common questions (accordion)
+- [x] T-4.1.11: Build footer — links, social, legal pages
+- [x] T-4.1.12: Build marketing navbar — logo, features, pricing, login, "Start Free Trial" CTA
+- [x] T-4.1.13: Write component tests for landing page sections (hero, features, pricing table, FAQ)
+- [x] T-4.1.14: Write component tests for INR/USD toggle and pricing card rendering
 
 #### Sprint 4.2 — SEO + Legal (Week 10)
 
@@ -416,13 +416,13 @@ npm run db:seed         # Seed default plans
 | 2. Auth | 2.1 OAuth + Reset (NextAuth) | DONE | 29/29 |
 | 3. AI | 3.1 Voice Parsing | DONE | 13/13 |
 | 3. AI | 3.2 Priorities + Dates | DONE | 13/13 |
-| 4. Marketing | 4.1 Landing Page | TODO | 0/14 |
+| 4. Marketing | 4.1 Landing Page | DONE | 14/14 |
 | 4. Marketing | 4.2 SEO + Legal | TODO | 0/11 |
 | 5. Export | 5.1 Export + Files | TODO | 0/14 |
 | 5. Export | 5.2 Recurring + GDPR | TODO | 0/14 |
 | 6. Production | 6.1 Infra + Monitoring | TODO | 0/14 |
 | 6. Production | 6.2 Security + Polish | TODO | 0/13 |
-| **TOTAL** | **12 sprints** | **IN PROGRESS** | **100/180** |
+| **TOTAL** | **12 sprints** | **IN PROGRESS** | **114/180** |
 
 ---
 
