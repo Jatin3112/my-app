@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
+import { Download } from "lucide-react"
 
 export default function WorkspaceSettingsPage() {
   const { data: session } = useSession()
@@ -108,6 +109,40 @@ export default function WorkspaceSettingsPage() {
           </CardHeader>
           <CardContent>
             <MemberList />
+          </CardContent>
+        </Card>
+
+        {/* Export Data */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Your Data</CardTitle>
+            <CardDescription>Download all your data as a JSON file (GDPR compliance).</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  const response = await fetch("/api/export/data")
+                  if (!response.ok) throw new Error("Export failed")
+                  const blob = await response.blob()
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement("a")
+                  a.href = url
+                  a.download = `voicetask-data-export-${new Date().toISOString().split("T")[0]}.json`
+                  document.body.appendChild(a)
+                  a.click()
+                  document.body.removeChild(a)
+                  URL.revokeObjectURL(url)
+                  toast.success("Data exported successfully")
+                } catch {
+                  toast.error("Failed to export data")
+                }
+              }}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export My Data
+            </Button>
           </CardContent>
         </Card>
 
