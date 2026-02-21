@@ -39,6 +39,11 @@ vi.mock("@/lib/api/reorder", () => ({
   reorderTodos: vi.fn().mockResolvedValue(undefined),
 }));
 
+// Mock file attachment component
+vi.mock("@/components/todos/file-attachment", () => ({
+  FileAttachment: () => <div data-testid="file-attachment">File Attachments</div>,
+}));
+
 // Mock sonner
 vi.mock("sonner", () => ({
   toast: Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn() }),

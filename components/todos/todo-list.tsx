@@ -70,6 +70,7 @@ import type { Todo, Project } from "@/lib/db/schema"
 import type { TodoPageData } from "@/lib/api/loaders"
 import { useWorkspace } from "@/hooks/use-workspace"
 import { CommentList } from "@/components/comments/comment-list"
+import { FileAttachment } from "@/components/todos/file-attachment"
 import { Separator } from "@/components/ui/separator"
 import { DatePicker } from "@/components/ui/date-picker"
 import { parseISO, isToday, isPast, isThisWeek } from "date-fns"
@@ -920,6 +921,8 @@ export function TodoList({ initialData, workspaces: initialWorkspaces, currentWo
                 </span>
               )}
             </div>
+            <Separator />
+            {detailTodo && <FileAttachment todoId={detailTodo.id} />}
             <Separator />
             {detailTodo && <CommentList todoId={detailTodo.id} />}
           </div>

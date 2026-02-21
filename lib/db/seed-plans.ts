@@ -18,6 +18,7 @@ const DEFAULT_PLANS = [
     max_users: 1,
     max_projects: 3,
     max_workspaces: 1,
+    max_storage_mb: 100,
     features: ["voice_capture", "timesheet", "dashboard", "export_csv"],
   },
   {
@@ -28,6 +29,7 @@ const DEFAULT_PLANS = [
     max_users: 5,
     max_projects: 10,
     max_workspaces: 3,
+    max_storage_mb: 1024,
     features: ["voice_capture", "timesheet", "dashboard", "export_csv", "export_pdf", "comments", "notifications"],
   },
   {
@@ -38,6 +40,7 @@ const DEFAULT_PLANS = [
     max_users: 15,
     max_projects: -1,
     max_workspaces: -1,
+    max_storage_mb: 10240,
     features: ["voice_capture", "timesheet", "dashboard", "export_csv", "export_pdf", "comments", "notifications", "file_attachments", "recurring_tasks", "priority_support"],
   },
 ];

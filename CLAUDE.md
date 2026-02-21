@@ -318,20 +318,20 @@ npm run db:seed         # Seed default plans
 - US-5.3: As a user, I can download or preview attached files
 
 **Tasks:**
-- [ ] T-5.1.1: Create `lib/api/export.ts` — generateTimesheetCSV(workspaceId, dateRange, filters)
-- [ ] T-5.1.2: Create `lib/api/export-pdf.ts` — generateTimesheetPDF using @react-pdf/renderer or jspdf
-- [ ] T-5.1.3: Create `app/api/export/timesheet/route.ts` — GET endpoint that streams CSV/PDF download
-- [ ] T-5.1.4: Add "Export" button to timesheet page — dropdown with CSV/PDF options + date range picker
-- [ ] T-5.1.5: Add company branding to PDF export — logo, workspace name, date range, summary totals
-- [ ] T-5.1.6: Set up Cloudflare R2 bucket (or S3) for file storage, add env vars (R2_ACCOUNT_ID, R2_ACCESS_KEY, R2_SECRET_KEY, R2_BUCKET)
-- [ ] T-5.1.7: Create `lib/storage/index.ts` — uploadFile, getSignedUrl, deleteFile helpers
-- [ ] T-5.1.8: Add `attachments` table to schema (id, todo_id, user_id, file_name, file_key, file_size, mime_type, created_at)
-- [ ] T-5.1.9: Create `app/api/upload/route.ts` — presigned URL generation or direct upload endpoint
-- [ ] T-5.1.10: Create `components/todos/file-attachment.tsx` — upload button, file list, preview/download links
-- [ ] T-5.1.11: Add file size limit enforcement based on plan (Solo: 100MB total, Team: 1GB, Agency: 10GB)
-- [ ] T-5.1.12: Write unit tests for export functions (CSV generation, PDF generation, date range filtering)
-- [ ] T-5.1.13: Write unit tests for file storage helpers (upload, signed URL, delete, size limit enforcement)
-- [ ] T-5.1.14: Write component tests for export UI and file attachment component
+- [x] T-5.1.1: Create `lib/api/export.ts` — generateTimesheetCSV(workspaceId, dateRange, filters)
+- [x] T-5.1.2: Create `lib/api/export-pdf.ts` — generateTimesheetPDF using @react-pdf/renderer or jspdf
+- [x] T-5.1.3: Create `app/api/export/timesheet/route.ts` — GET endpoint that streams CSV/PDF download
+- [x] T-5.1.4: Add "Export" button to timesheet page — dropdown with CSV/PDF options + date range picker
+- [x] T-5.1.5: Add company branding to PDF export — logo, workspace name, date range, summary totals
+- [x] T-5.1.6: Set up local filesystem storage under `public/uploads/` (swappable to R2/S3 later)
+- [x] T-5.1.7: Create `lib/storage/index.ts` — uploadFile, getFileUrl, deleteFile helpers
+- [x] T-5.1.8: Add `attachments` table to schema (id, todo_id, user_id, file_name, file_key, file_size, mime_type, created_at)
+- [x] T-5.1.9: Create `app/api/upload/route.ts` — direct upload endpoint with storage limit checks
+- [x] T-5.1.10: Create `components/todos/file-attachment.tsx` — upload button, file list, preview/download links
+- [x] T-5.1.11: Add file size limit enforcement based on plan (Solo: 100MB total, Team: 1GB, Agency: 10GB)
+- [x] T-5.1.12: Write unit tests for export functions (CSV generation, PDF generation, date range filtering)
+- [x] T-5.1.13: Write unit tests for file storage helpers (upload, signed URL, delete, size limit enforcement)
+- [x] T-5.1.14: Write component tests for export UI and file attachment component
 
 #### Sprint 5.2 — Recurring Tasks + Data Export (Week 12-13)
 
@@ -418,11 +418,11 @@ npm run db:seed         # Seed default plans
 | 3. AI | 3.2 Priorities + Dates | DONE | 13/13 |
 | 4. Marketing | 4.1 Landing Page | DONE | 14/14 |
 | 4. Marketing | 4.2 SEO + Legal | DONE | 11/11 |
-| 5. Export | 5.1 Export + Files | TODO | 0/14 |
+| 5. Export | 5.1 Export + Files | DONE | 14/14 |
 | 5. Export | 5.2 Recurring + GDPR | TODO | 0/14 |
 | 6. Production | 6.1 Infra + Monitoring | TODO | 0/14 |
 | 6. Production | 6.2 Security + Polish | TODO | 0/13 |
-| **TOTAL** | **12 sprints** | **IN PROGRESS** | **114/180** |
+| **TOTAL** | **12 sprints** | **IN PROGRESS** | **139/180** |
 
 ---
 

@@ -14,6 +14,7 @@ export type PlanLimits = {
   maxUsers: number;
   maxProjects: number;
   maxWorkspaces: number;
+  maxStorageMb: number;
   features: string[];
 };
 
@@ -94,6 +95,7 @@ export async function getPlanLimits(plan: Plan): Promise<PlanLimits> {
     maxUsers: plan.max_users,
     maxProjects: plan.max_projects,
     maxWorkspaces: plan.max_workspaces,
+    maxStorageMb: plan.max_storage_mb,
     features: (plan.features as string[]) ?? [],
   };
 }
@@ -105,6 +107,7 @@ export async function getUsageInfo(workspaceId: string, userId: string): Promise
     maxUsers: 1,
     maxProjects: 3,
     maxWorkspaces: 1,
+    maxStorageMb: 100,
     features: [],
   };
 

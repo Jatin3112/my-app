@@ -42,7 +42,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Plus, Pencil, Trash2, Calendar as CalendarIcon, Search } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Plus, Pencil, Trash2, Calendar as CalendarIcon, Search, Download, FileText, FileSpreadsheet } from "lucide-react"
 import { DatePicker } from "@/components/ui/date-picker"
 import { VoiceInput } from "@/components/ui/voice-input"
 import { toast } from "sonner"
@@ -301,6 +307,35 @@ export function TimesheetList() {
     })
   }
 
+  async function handleExport(formatType: "csv" | "pdf") {
+    if (!workspaceId) return
+    try {
+      const params = new URLSearchParams({
+        workspaceId,
+        format: formatType,
+        startDate: dateFrom,
+        endDate: dateTo,
+        workspaceName: currentWorkspace?.name || "Workspace",
+      })
+      const response = await fetch(`/api/export/timesheet?${params}`)
+      if (!response.ok) throw new Error("Export failed")
+
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `timesheet-${dateFrom}-to-${dateTo}.${formatType}`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      toast.success(`Timesheet exported as ${formatType.toUpperCase()}`)
+    } catch (error) {
+      toast.error("Failed to export timesheet")
+      console.error(error)
+    }
+  }
+
   // Unique project names from entries for filter
   const projectNames = [...new Set(entries.map((e) => e.project_name))].sort()
 
@@ -349,24 +384,43 @@ export function TimesheetList() {
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">Timesheet Entries</h2>
-          <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-              <Button
-                onClick={() => {
-                  setEditingEntry(null)
-                  setFormData({
-                    date: format(new Date(), "yyyy-MM-dd"),
-                    project_name: "",
-                    task_description: "",
-                    hours: "",
-                    notes: "",
-                  })
-                }}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Entry
-              </Button>
-            </DialogTrigger>
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleExport("csv")}>
+                  <FileSpreadsheet className="w-4 h-4 mr-2" />
+                  Export as CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport("pdf")}>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Export as PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  onClick={() => {
+                    setEditingEntry(null)
+                    setFormData({
+                      date: format(new Date(), "yyyy-MM-dd"),
+                      project_name: "",
+                      task_description: "",
+                      hours: "",
+                      notes: "",
+                    })
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Entry
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-md">
               <form onSubmit={handleSubmit}>
                 <DialogHeader>
@@ -456,7 +510,8 @@ export function TimesheetList() {
                 </DialogFooter>
               </form>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         </div>
 
         {/* Filters row */}

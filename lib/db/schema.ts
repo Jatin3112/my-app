@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, boolean, date, doublePrecision, integer, uniqueIndex, index, json } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, boolean, date, doublePrecision, integer, bigint, uniqueIndex, index, json } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 export const users = pgTable("users", {
@@ -139,6 +139,7 @@ export const plans = pgTable("plans", {
   max_users: integer("max_users").notNull(),
   max_projects: integer("max_projects").notNull(),
   max_workspaces: integer("max_workspaces").notNull(),
+  max_storage_mb: integer("max_storage_mb").notNull().default(100),
   features: json("features").$type<string[]>().default([]),
   is_active: boolean("is_active").default(true).notNull(),
   razorpay_plan_id: text("razorpay_plan_id"),
@@ -215,6 +216,21 @@ export const emailVerificationTokens = pgTable("email_verification_tokens", {
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const attachments = pgTable("attachments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  todo_id: uuid("todo_id").references(() => todos.id, { onDelete: "cascade" }).notNull(),
+  user_id: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+  workspace_id: uuid("workspace_id").references(() => workspaces.id, { onDelete: "cascade" }).notNull(),
+  file_name: text("file_name").notNull(),
+  file_key: text("file_key").notNull(),
+  file_size: bigint("file_size", { mode: "number" }).notNull(),
+  mime_type: text("mime_type").notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  todoIdx: index("attachments_todo_id_idx").on(table.todo_id),
+  workspaceIdx: index("attachments_workspace_id_idx").on(table.workspace_id),
+}));
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   projects: many(projects),
@@ -290,6 +306,7 @@ export const todosRelations = relations(todos, ({ one, many }) => ({
     references: [projects.id],
   }),
   comments: many(comments),
+  attachments: many(attachments),
 }));
 
 export const timesheetEntriesRelations = relations(timesheetEntries, ({ one }) => ({
@@ -393,6 +410,21 @@ export const emailVerificationTokensRelations = relations(emailVerificationToken
   }),
 }));
 
+export const attachmentsRelations = relations(attachments, ({ one }) => ({
+  todo: one(todos, {
+    fields: [attachments.todo_id],
+    references: [todos.id],
+  }),
+  user: one(users, {
+    fields: [attachments.user_id],
+    references: [users.id],
+  }),
+  workspace: one(workspaces, {
+    fields: [attachments.workspace_id],
+    references: [workspaces.id],
+  }),
+}));
+
 // Types
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -438,3 +470,6 @@ export type NewAccount = typeof accounts.$inferInsert;
 
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type EmailVerificationToken = typeof emailVerificationTokens.$inferSelect;
+
+export type Attachment = typeof attachments.$inferSelect;
+export type NewAttachment = typeof attachments.$inferInsert;
