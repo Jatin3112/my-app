@@ -57,6 +57,13 @@
       "when": 1771529653743,
       "tag": "0007_previous_nekra",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1771648150613,
+      "tag": "0008_panoramic_sugar_man",
+      "breakpoints": true
     }
   ]
 }

@@ -4,8 +4,10 @@ import { relations } from "drizzle-orm";
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: text("email").unique().notNull(),
-  password: text("password").notNull(),
+  password: text("password"),
   name: text("name"),
+  email_verified: timestamp("email_verified"),
+  image: text("image"),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -176,6 +178,41 @@ export const paymentHistory = pgTable("payment_history", {
   workspaceIdx: index("payment_history_workspace_id_idx").on(table.workspace_id),
 }));
 
+export const accounts = pgTable("accounts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  user_id: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  provider: text("provider").notNull(),
+  provider_account_id: text("provider_account_id").notNull(),
+  access_token: text("access_token"),
+  refresh_token: text("refresh_token"),
+  token_type: text("token_type"),
+  scope: text("scope"),
+  id_token: text("id_token"),
+  expires_at: integer("expires_at"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  providerAccountIdx: uniqueIndex("accounts_provider_provider_account_id_idx").on(table.provider, table.provider_account_id),
+  userIdx: index("accounts_user_id_idx").on(table.user_id),
+}));
+
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  user_id: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  token_hash: text("token_hash").notNull(),
+  expires_at: timestamp("expires_at").notNull(),
+  used_at: timestamp("used_at"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const emailVerificationTokens = pgTable("email_verification_tokens", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  user_id: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  token_hash: text("token_hash").notNull(),
+  expires_at: timestamp("expires_at").notNull(),
+  used_at: timestamp("used_at"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   projects: many(projects),
@@ -185,6 +222,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   workspaceMemberships: many(workspaceMembers),
   comments: many(comments),
   notifications: many(notifications, { relationName: "recipient" }),
+  accounts: many(accounts),
 }));
 
 export const workspacesRelations = relations(workspaces, ({ one, many }) => ({
@@ -332,6 +370,27 @@ export const paymentHistoryRelations = relations(paymentHistory, ({ one }) => ({
   }),
 }));
 
+export const accountsRelations = relations(accounts, ({ one }) => ({
+  user: one(users, {
+    fields: [accounts.user_id],
+    references: [users.id],
+  }),
+}));
+
+export const passwordResetTokensRelations = relations(passwordResetTokens, ({ one }) => ({
+  user: one(users, {
+    fields: [passwordResetTokens.user_id],
+    references: [users.id],
+  }),
+}));
+
+export const emailVerificationTokensRelations = relations(emailVerificationTokens, ({ one }) => ({
+  user: one(users, {
+    fields: [emailVerificationTokens.user_id],
+    references: [users.id],
+  }),
+}));
+
 // Types
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -371,3 +430,9 @@ export type NewSubscription = typeof subscriptions.$inferInsert;
 
 export type PaymentRecord = typeof paymentHistory.$inferSelect;
 export type NewPaymentRecord = typeof paymentHistory.$inferInsert;
+
+export type Account = typeof accounts.$inferSelect;
+export type NewAccount = typeof accounts.$inferInsert;
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type EmailVerificationToken = typeof emailVerificationTokens.$inferSelect;
