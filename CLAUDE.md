@@ -294,17 +294,17 @@ npm run db:seed         # Seed default plans
 - US-4.5: As a visitor, I can read privacy policy and terms of service
 
 **Tasks:**
-- [ ] T-4.2.1: Add Open Graph meta tags to marketing pages (title, description, image)
-- [ ] T-4.2.2: Add Twitter Card meta tags
-- [ ] T-4.2.3: Create `app/sitemap.ts` — dynamic sitemap generation
-- [ ] T-4.2.4: Create `app/robots.ts` — robots.txt generation
-- [ ] T-4.2.5: Add structured data (JSON-LD) for SaaS product schema
-- [ ] T-4.2.6: Create `app/(marketing)/privacy/page.tsx` — privacy policy
-- [ ] T-4.2.7: Create `app/(marketing)/terms/page.tsx` — terms of service
-- [ ] T-4.2.8: Create `app/(marketing)/refund/page.tsx` — refund policy (required for Razorpay)
-- [ ] T-4.2.9: Optimize landing page — lazy load images, preload fonts, lighthouse score > 90
-- [ ] T-4.2.10: Write tests for sitemap and robots generation, verify SEO meta tags render correctly
-- [ ] T-4.2.11: Run full test suite + coverage, verify build passes
+- [x] T-4.2.1: Add Open Graph meta tags to marketing pages (title, description, image)
+- [x] T-4.2.2: Add Twitter Card meta tags
+- [x] T-4.2.3: Create `app/sitemap.ts` — dynamic sitemap generation
+- [x] T-4.2.4: Create `app/robots.ts` — robots.txt generation
+- [x] T-4.2.5: Add structured data (JSON-LD) for SaaS product schema
+- [x] T-4.2.6: Create `app/(marketing)/privacy/page.tsx` — privacy policy
+- [x] T-4.2.7: Create `app/(marketing)/terms/page.tsx` — terms of service
+- [x] T-4.2.8: Create `app/(marketing)/refund/page.tsx` — refund policy (required for Razorpay)
+- [x] T-4.2.9: Optimize landing page — lazy load images, preload fonts, lighthouse score > 90
+- [x] T-4.2.10: Write tests for sitemap and robots generation, verify SEO meta tags render correctly
+- [x] T-4.2.11: Run full test suite + coverage, verify build passes
 
 ---
 
@@ -417,7 +417,7 @@ npm run db:seed         # Seed default plans
 | 3. AI | 3.1 Voice Parsing | DONE | 13/13 |
 | 3. AI | 3.2 Priorities + Dates | DONE | 13/13 |
 | 4. Marketing | 4.1 Landing Page | DONE | 14/14 |
-| 4. Marketing | 4.2 SEO + Legal | TODO | 0/11 |
+| 4. Marketing | 4.2 SEO + Legal | DONE | 11/11 |
 | 5. Export | 5.1 Export + Files | TODO | 0/14 |
 | 5. Export | 5.2 Recurring + GDPR | TODO | 0/14 |
 | 6. Production | 6.1 Infra + Monitoring | TODO | 0/14 |
