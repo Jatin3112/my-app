@@ -1,4 +1,4 @@
-import type { Plan, Subscription } from "@/lib/db/schema";
+import type { Plan, Subscription, User, Account } from "@/lib/db/schema";
 import type { SubscriptionWithPlan } from "@/lib/api/subscriptions";
 
 // ─── ID Helpers ───
@@ -129,6 +129,55 @@ export function createActivePaidSub(planOverrides: Partial<Plan> = {}): Subscrip
     },
     planOverrides,
   );
+}
+
+// ─── User Factories ───
+
+export function createMockUser(overrides: Partial<User> = {}): User {
+  return {
+    id: mockUUID(),
+    email: "test@example.com",
+    password: "$2b$10$hashedpassword",
+    name: "Test User",
+    email_verified: new Date("2025-01-01"),
+    image: null,
+    created_at: new Date("2025-01-01"),
+    updated_at: new Date("2025-01-01"),
+    ...overrides,
+  };
+}
+
+export function createOAuthUser(overrides: Partial<User> = {}): User {
+  return createMockUser({
+    password: null,
+    email_verified: new Date("2025-01-01"),
+    image: "https://example.com/avatar.png",
+    ...overrides,
+  });
+}
+
+export function createUnverifiedUser(overrides: Partial<User> = {}): User {
+  return createMockUser({
+    email_verified: null,
+    ...overrides,
+  });
+}
+
+export function createMockAccount(overrides: Partial<Account> = {}): Account {
+  return {
+    id: mockUUID(),
+    user_id: mockUUID(),
+    provider: "google",
+    provider_account_id: "google-123456",
+    access_token: "mock-access-token",
+    refresh_token: "mock-refresh-token",
+    token_type: "Bearer",
+    scope: "openid email profile",
+    id_token: "mock-id-token",
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    created_at: new Date("2025-01-01"),
+    ...overrides,
+  };
 }
 
 // ─── Reset ───

@@ -10,7 +10,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "text-summary", "lcov"],
-      include: ["lib/api/**", "lib/payments/**", "lib/email/**", "components/billing/**"],
+      include: ["lib/api/**", "lib/payments/**", "lib/email/**", "lib/auth/**", "components/billing/**"],
     },
   },
   resolve: {
